@@ -1,14 +1,20 @@
 # Korean translation for solanum.
-# Copyright (C) 2021 solanum's COPYRIGHT HOLDER
+# Copyright (C) 2021 solanum's all of contributors.
 # This file is distributed under the same license as the solanum package.
-# Seong-ho Cho <shcho@gnome.org>, 2021-2023.
+# Seong-ho Cho <shcho@gnome.org>, 2021-2023, 2026
+#
+# 번역에 기여하신 분은 'translator-credits'에 name <email>, year 순으로 기입하여 주십시오.
+# 다른 번역 참여자 크레딧에 추가하는 경우,
+# "name1 <email>, years\n"
+# "name2 <email>, years"
+# ... 감사합니다. 
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: solanum main\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/Solanum/issues\n"
-"POT-Creation-Date: 2023-01-25 22:06+0000\n"
-"PO-Revision-Date: 2023-01-27 02:55+0900\n"
+"POT-Creation-Date: 2025-03-11 02:29+0000\n"
+"PO-Revision-Date: 2026-02-23 13:33+0900\n"
 "Last-Translator: Seong-ho Cho <shcho@gnome.org>\n"
 "Language-Team: Korean <gnome-kr@googlegroups.com>\n"
 "Language: ko\n"
@@ -16,11 +22,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.3.1\n"
+"X-Generator: Poedit 3.6\n"
 
 #: data/org.gnome.Solanum.appdata.xml.in.in:7
-#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:79 src/app.rs:178
-#: src/window.rs:303
+#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:78 src/window.rs:328
 msgid "Solanum"
 msgstr "솔라넘"
 
@@ -37,7 +42,7 @@ msgstr ""
 "시간 별로 휴식 시간을 부여하며 4시간이 지나면 긴 휴식 시간을 넣습니다."
 
 #. Translators: please do NOT translate this
-#: data/org.gnome.Solanum.appdata.xml.in.in:26
+#: data/org.gnome.Solanum.appdata.xml.in.in:30
 msgid "Christopher Davis"
 msgstr "Christopher Davis"
 
@@ -61,6 +66,10 @@ msgstr "분단위 긴 휴식 시간입니다."
 #: data/org.gnome.Solanum.gschema.xml:18
 msgid "The number of sessions until a long break."
 msgstr "긴 휴식 시간 후 세션 수입니다."
+
+#: data/org.gnome.Solanum.gschema.xml:22
+msgid "Whether the window should fullscreen during breaks."
+msgstr "휴식 시간 동안 창을 전체 화면으로 나타낼 지 여부입니다."
 
 #: data/gtk/help-overlay.blp:8
 msgctxt "shortcut window"
@@ -103,100 +112,107 @@ msgstr ""
 msgid "Lap Length"
 msgstr "소요 시간"
 
-#: data/ui/preferences-window.blp:29
+#: data/ui/preferences-window.blp:23
 msgid "Short Break Length"
 msgstr "짧은 휴식 시간"
 
-#: data/ui/preferences-window.blp:45
+#: data/ui/preferences-window.blp:33
 msgid "Long Break Length"
 msgstr "긴 휴식 시간"
 
-#: data/ui/preferences-window.blp:63
+#: data/ui/preferences-window.blp:45
 msgid "Sessions Until Long Break"
 msgstr "긴 휴식 이전 세션"
 
-#: data/ui/window.blp:48
+#: data/ui/preferences-window.blp:57
+msgid "Fullscreen During Breaks"
+msgstr "쉬는 시간 동안 전체 화면 표시"
+
+#: data/ui/window.blp:40
 msgid "Toggle Timer"
 msgstr "타이머 전환"
 
-#: data/ui/window.blp:56 src/window.rs:321
+#: data/ui/window.blp:48 src/window.rs:346
 msgid "Skip"
 msgstr "건너뛰기"
 
-#: data/ui/window.blp:66
+#: data/ui/window.blp:59
 msgid "Main Menu"
 msgstr "주 메뉴"
 
-#: data/ui/window.blp:82
+#: data/ui/window.blp:78
 msgid "Reset Sessions"
 msgstr "세션 초기화"
 
-#: data/ui/window.blp:86
+#: data/ui/window.blp:82
 msgid "_Preferences"
 msgstr "기본 설정(_P)"
 
-#: data/ui/window.blp:87
+#: data/ui/window.blp:83
 msgid "_Keyboard Shortcuts"
 msgstr "키보드 바로 가기 키(_K)"
 
-#: data/ui/window.blp:88
+#: data/ui/window.blp:84
 msgid "_About Solanum"
 msgstr "솔라넘 정보(_A)"
 
-#. Translators: Replace "translator-credits" with your names, one name per line
-#: src/app.rs:183
+#: src/app.rs:165
 msgid "translator-credits"
-msgstr "조성호 <shcho@gnome.org>, 2021, 2022"
+msgstr "조성호 <shcho@gnome.org>, 2021-2023, 2026"
 
-#: src/app.rs:195
+#: src/app.rs:174
 msgid "_Donate on Patreon"
 msgstr "패트리언에 기부하기(_D)"
 
-#: src/app.rs:199
+#: src/app.rs:178
 msgid "_Sponsor on GitHub"
 msgstr "깃허브 후원자(_S)"
 
-#: src/app.rs:204
+#: src/app.rs:183
 msgid "Icon by"
 msgstr "아이콘 제작"
 
-#: src/app.rs:208
+#: src/app.rs:187
 msgid "Sound by"
 msgstr "소리 제작"
 
-#: src/window.rs:230
+#: src/app.rs:192
+msgid "Supported by"
+msgstr "후원자/조직:"
+
+#: src/window.rs:243
 msgid "Long Break"
 msgstr "긴 휴식 시간"
 
-#: src/window.rs:236
+#: src/window.rs:249
 msgid "Short Break"
 msgstr "짧은 휴식 시간"
 
-#: src/window.rs:307
+#: src/window.rs:332
 msgid "Back to Work"
 msgstr "업무 복귀"
 
-#: src/window.rs:308
+#: src/window.rs:333
 msgid "Ready to keep working?"
 msgstr "계속 일할 준비가 됐나요?"
 
-#: src/window.rs:309
+#: src/window.rs:334
 msgid "Start Working"
 msgstr "업무 시작"
 
-#: src/window.rs:312
+#: src/window.rs:337
 msgid "Break Time"
 msgstr "휴식 시간"
 
-#: src/window.rs:313
+#: src/window.rs:338
 msgid "Stretch your legs, and drink some water."
 msgstr "다리를 쭉 펴고, 물을 챙겨 드세요."
 
-#: src/window.rs:314
+#: src/window.rs:339
 msgid "Start Break"
 msgstr "휴식 시작"
 
-#: src/window.rs:334
+#: src/window.rs:359
 msgid "Lap {}"
 msgid_plural "Lap {}"
 msgstr[0] "Lap {}"
