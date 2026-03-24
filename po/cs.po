@@ -3,23 +3,25 @@
 # This file is distributed under the same license as the solanum package.
 #
 # Marek Černocký <marek@manet.cz>, 2020, 2021.
+# Jonáš Loskot <jonas@jonasloskot.cz>, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: solanum main\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/Solanum/issues\n"
-"POT-Creation-Date: 2021-10-15 21:56+0000\n"
-"PO-Revision-Date: 2021-10-17 16:46+0200\n"
-"Last-Translator: Marek Černocký <marek@manet.cz>\n"
+"POT-Creation-Date: 2025-03-11 02:29+0000\n"
+"PO-Revision-Date: 2026-01-05 18:28+0100\n"
+"Last-Translator: Jonáš Loskot <jonas@jonasloskot.cz>\n"
 "Language-Team: Czech <gnome-cs-list@gnome.org>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Poedit 3.8\n"
 
 #: data/org.gnome.Solanum.appdata.xml.in.in:7
-#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:78 src/window.rs:300
+#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:78 src/window.rs:328
 msgid "Solanum"
 msgstr "Solanum"
 
@@ -37,56 +39,65 @@ msgstr ""
 "přestávkou po 4. cyklu."
 
 #. Translators: please do NOT translate this
-#: data/org.gnome.Solanum.appdata.xml.in.in:26
+#: data/org.gnome.Solanum.appdata.xml.in.in:30
 msgid "Christopher Davis"
 msgstr "Christopher Davis"
 
 #. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 #: data/org.gnome.Solanum.desktop.in.in:12
 msgid "Pomodoro;Timer;Productivity;"
-msgstr "pomodoro;časovač;organizace času;produktivita;"
+msgstr "Pomodoro;Časovač;Produktivita;"
 
 #: data/org.gnome.Solanum.gschema.xml:6
 msgid "The length of a work lap in minutes."
-msgstr "Délka pracovního cyklu v minuátch"
+msgstr "Délka pracovního cyklu v minuátch."
 
 #: data/org.gnome.Solanum.gschema.xml:10
 msgid "The length of a short break in minutes."
-msgstr "Délka krátké přestávky v minutách"
+msgstr "Délka krátké přestávky v minutách."
 
 #: data/org.gnome.Solanum.gschema.xml:14
 msgid "The length of a long break in minutes."
-msgstr "Délka dlouhé přestávky v minutách"
+msgstr "Délka dlouhé přestávky v minutách."
 
 #: data/org.gnome.Solanum.gschema.xml:18
 msgid "The number of sessions until a long break."
-msgstr "Počet sezení do dlouhé přestávky"
+msgstr "Počet sezení do dlouhé přestávky."
 
-#: data/gtk/help-overlay.ui:12
+#: data/org.gnome.Solanum.gschema.xml:22
+msgid "Whether the window should fullscreen during breaks."
+msgstr "Zda by se okno mělo zvětšit na celou obrazovku během přestávek."
+
+#: data/gtk/help-overlay.blp:8
 msgctxt "shortcut window"
 msgid "General Shortcuts"
 msgstr "Obecné"
 
-#: data/gtk/help-overlay.ui:16
+#: data/gtk/help-overlay.blp:11
 msgctxt "shortcut window"
 msgid "Show Primary Menu"
 msgstr "Zobrazit hlavní nabídku"
 
-#: data/gtk/help-overlay.ui:23
+#: data/gtk/help-overlay.blp:16
+msgctxt "shortcut window"
+msgid "Show Preferences"
+msgstr "Zobrazit předvolby"
+
+#: data/gtk/help-overlay.blp:21
 msgctxt "shortcut window"
 msgid "Show Keyboard Shortcuts"
 msgstr "Zobrazit klávesové zkratky"
 
-#: data/gtk/help-overlay.ui:30
+#: data/gtk/help-overlay.blp:26
 msgctxt "shortcut window"
 msgid "Quit"
 msgstr "Ukončit"
 
-#: data/ui/preferences-window.ui:9
+#: data/ui/preferences-window.blp:9
 msgid "Session Length"
 msgstr "Délka sezení"
 
-#: data/ui/preferences-window.ui:10
+#: data/ui/preferences-window.blp:10
 msgid ""
 "The length of each session type in minutes. Changes apply to the next "
 "session of each type."
@@ -94,86 +105,118 @@ msgstr ""
 "Délka jednotlivých typů sezení v minutách. Změny se projeví u následujících "
 "sezení od každého typu."
 
-#: data/ui/preferences-window.ui:13
+#: data/ui/preferences-window.blp:13
 msgid "Lap Length"
 msgstr "Délka cyklu"
 
-#: data/ui/preferences-window.ui:31
+#: data/ui/preferences-window.blp:23
 msgid "Short Break Length"
 msgstr "Délka krátké přestávky"
 
-#: data/ui/preferences-window.ui:49
+#: data/ui/preferences-window.blp:33
 msgid "Long Break Length"
 msgstr "Délka dlouhé přestávky"
 
-#: data/ui/preferences-window.ui:71
+#: data/ui/preferences-window.blp:45
 msgid "Sessions Until Long Break"
 msgstr "Sezení do dlouhé přestávky"
 
-#: data/ui/window.ui:109
-msgid "_Preferences"
-msgstr "_Předvolby"
+#: data/ui/preferences-window.blp:57
+msgid "Fullscreen During Breaks"
+msgstr "Celá obrazovka během přestávek"
 
-#: data/ui/window.ui:113
-msgid "_Keyboard Shortcuts"
-msgstr "_Klávesové zkratky"
+#: data/ui/window.blp:40
+msgid "Toggle Timer"
+msgstr "Přepnout časovač"
 
-#: data/ui/window.ui:117
-msgid "_About Solanum"
-msgstr "O _aplikaci Solanum"
-
-#: src/app.rs:182
-msgid "A pomodoro timer for GNOME"
-msgstr "Organizace času pomodoro pro GNOME"
-
-#. Translators: Replace "translator-credits" with your names, one name per line
-#: src/app.rs:184
-msgid "translator-credits"
-msgstr "Marek Černocký <marek@manet.cz>"
-
-#: src/app.rs:190
-msgid "Donate on Patreon"
-msgstr "Přispět přes Patreon"
-
-#: src/window.rs:237
-msgid "Long Break"
-msgstr "Dlouhá přestávka"
-
-#: src/window.rs:243
-msgid "Short Break"
-msgstr "Krátká přestávka"
-
-#: src/window.rs:304
-msgid "Back to Work"
-msgstr "Zpět do práce"
-
-#: src/window.rs:305
-msgid "Ready to keep working?"
-msgstr "Jste připraveni pokračovat v práci?"
-
-#: src/window.rs:306
-msgid "Start Working"
-msgstr "Začít pracovat"
-
-#: src/window.rs:309
-msgid "Break Time"
-msgstr "Čas přestávky"
-
-#: src/window.rs:310
-msgid "Stretch your legs, and drink some water."
-msgstr "Protáhněte si nohy a napijte se vody."
-
-#: src/window.rs:311
-msgid "Start Break"
-msgstr "Začít přestávku"
-
-#: src/window.rs:317
+#: data/ui/window.blp:48 src/window.rs:346
 msgid "Skip"
 msgstr "Přeskočit"
 
-#: src/window.rs:330
+#: data/ui/window.blp:59
+msgid "Main Menu"
+msgstr "Hlavní nabídka"
+
+#: data/ui/window.blp:78
+msgid "Reset Sessions"
+msgstr "Resetovat relace"
+
+#: data/ui/window.blp:82
+msgid "_Preferences"
+msgstr "_Předvolby"
+
+#: data/ui/window.blp:83
+msgid "_Keyboard Shortcuts"
+msgstr "_Klávesové zkratky"
+
+#: data/ui/window.blp:84
+msgid "_About Solanum"
+msgstr "O _aplikaci Solanum"
+
+#: src/app.rs:165
+msgid "translator-credits"
+msgstr ""
+"Marek Černocký <marek@manet.cz>\n"
+"Jonáš Loskot <jonas@jonasloskot.cz>"
+
+#: src/app.rs:174
+msgid "_Donate on Patreon"
+msgstr "_Přispět přes Patreon"
+
+#: src/app.rs:178
+msgid "_Sponsor on GitHub"
+msgstr "_Sponzorovat na GitHubu"
+
+#: src/app.rs:183
+msgid "Icon by"
+msgstr "Ikonu vytvořili"
+
+#: src/app.rs:187
+msgid "Sound by"
+msgstr "Zvuk vytvořili"
+
+#: src/app.rs:192
+msgid "Supported by"
+msgstr "Podporují"
+
+#: src/window.rs:243
+msgid "Long Break"
+msgstr "Dlouhá přestávka"
+
+#: src/window.rs:249
+msgid "Short Break"
+msgstr "Krátká přestávka"
+
+#: src/window.rs:332
+msgid "Back to Work"
+msgstr "Zpět do práce"
+
+#: src/window.rs:333
+msgid "Ready to keep working?"
+msgstr "Jste připraveni pokračovat v práci?"
+
+#: src/window.rs:334
+msgid "Start Working"
+msgstr "Začít pracovat"
+
+#: src/window.rs:337
+msgid "Break Time"
+msgstr "Čas přestávky"
+
+#: src/window.rs:338
+msgid "Stretch your legs, and drink some water."
+msgstr "Protáhněte si nohy a napijte se vody."
+
+#: src/window.rs:339
+msgid "Start Break"
+msgstr "Začít přestávku"
+
+#: src/window.rs:359
 msgid "Lap {}"
 msgid_plural "Lap {}"
 msgstr[0] "{}. cyklus"
 msgstr[1] "{}. cyklus"
 msgstr[2] "{}. cyklus"
+
+#~ msgid "A pomodoro timer for GNOME"
+#~ msgstr "Organizace času pomodoro pro GNOME"
