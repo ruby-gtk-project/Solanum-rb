@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 Christopher Davis <christopherdavis@gnome.org> -->
+<component type="desktop-application">
+  <id>org.gnome.Solanum.Rb</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Solanum</name>
+  <summary>Balance working time and break time</summary>
+  <description>
+    <p>
+      Solanum is a time tracking app that uses the pomodoro technique. Work in 4 sessions,
+      with breaks in between each session and one long break after all 4.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://gitlab.gnome.org/World/Solanum/-/raw/main/data/screenshots/screenshot-1.png</image>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://gitlab.gnome.org/World/Solanum/-/raw/main/data/screenshots/screenshot-2.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">org.gnome.Solanum.Rb.desktop</launchable>
+  <url type="homepage">https://apps.gnome.org/Solanum</url>
+  <url type="bugtracker">https://gitlab.gnome.org/World/Solanum/-/issues</url>
+  <url type="donation">https://patreon.com/chrisgnome</url>
+  <url type="vcs-browser">https://gitlab.gnome.org/World/Solanum/</url>
+  <url type="translate">https://l10n.gnome.org/module/Solanum/</url>
+  <!-- Translators: please do NOT translate this -->
+  <developer_name>Christopher Davis</developer_name>
+  <developer id="io.gitlab.brainblasted">
+    <name>Christopher Davis</name>
+  </developer>
+  <update_contact>christopherdavis_at_gnome.org</update_contact>
+  <requires>
+    <display_length compare="ge">360</display_length>
+    <internet>offline-only</internet>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+  <translation type="gettext">solanum</translation>
+  <branding>
+    <color type="primary" scheme_preference="light">#f66151</color>
+    <color type="primary" scheme_preference="dark">#771414</color>
+  </branding>
+  <releases>
+    <release version="6.0.0" date="2025-04-06">
+      <description>
+        <p>Solanum 6.0.0 brings the following changes</p>
+        <ul>
+          <li>The timer's text now scales with window size. You should now see larger text at larger window sizes.</li>
+          <li>You now have the option to make Solanum go fullscreen when a break starts. (Josiah Fu)</li>
+          <li>Notifications are now appropriately dismissed when resuming the timer. (Douglas Deslauriers)</li>
+          <li>We now ship branding colors in our app data (Tobias Bernard)</li>
+          <li>Miscellaneous metainfo improvements (Brage Fuglseth and Maximiliano)</li>
+          <li>Various code modernization updates.</li>
+          <li>Miscellaneous translation updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="5.0.0" date="2023-10-29">
+      <description>
+        <p>Solanum 5.0.0 brings a minor visual refresh and a few other changes:</p>
+        <ul>
+          <li>Added the ability to view the release notes for the latest version</li>
+          <li>Swapped to a new audio player</li>
+          <li>Fixed the notification buttons doing nothing</li>
+          <li>Miscellaneous translation updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="4.0.0" date="2023-06-08">
+      <description>
+        <p>Solanum 4.0.0 brings major updates to the backend and fixes some long-standing bugs.</p>
+        <ul>
+          <li>Added the ability to restart a session from the beginning (Dani Rodrígues)</li>
+          <li>Raised the priority of notifications so they show with GNOME's Do Not Disturb enabled (Rekai Musuka)</li>
+          <li>Fixed timer direction in RTL languages (Yosef Or Boczko)</li>
+          <li>Fixed incorrect shortcut being displayed for Preferences in the Keyboard Shorcuts window (Subri Ünal)</li>
+          <li>Fixed session noises playing randomly (Christopher Davis)</li>
+          <li>Miscellaneous translation updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="3.0.1" date="2021-10-28">
+      <description>
+        <p>The 3.0.1 release of Solanum brings a minor bug fix.</p>
+        <ul>
+          <li>Fixed an issue where using the skip button would cause laps to repeat (fixed by @pierre-si).</li>
+          <li>Added Occitan translation.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="3.0.0" date="2021-10-22">
+      <description>
+        <p>The 3.0.0 release of Solanum brings new preferences, updated translations, and minor bug fixes.</p>
+        <ul>
+          <li>Solanum now has preferences to adjust the various timer lengths, as well as how many laps to go through before a long break.</li>
+          <li>New and updated translations for the German, Spanish, Slovenian, Dutch, Romanian, Chinese (China), Korean, Galician, Brazilian Portuguese, Ukranian, Swedish, Polish, Czech, and Finish languages.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.0" date="2021-02-08">
+      <description>
+        <p>The 2.1.0 release of Solanum brings translations, bug fixes, and a minor redesign.</p>
+        <ul>
+          <li>Adjust the main window's design to match new styling for applets</li>
+          <li>Updated Finnish and Serbian translations</li>
+          <li>Disable idle animation when the app is running in the background</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.0" date="2020-12-16">
+      <description>
+        <p>The 2.0.0 release of Solanum brings translations, bug fixes, and a port to GTK 4.</p>
+        <ul>
+          <li>The UI has been ported to GTK 4, making Solanum one of the first GTK 4 apps.</li>
+          <li>Support for translations has been added.</li>
+          <li>Added translations for French, Spanish, Swedish, Slovenian, Italian, Indonesian, Polish, Finnish, Brazilian Portuguese, Basque, Czech, Ukranian, and British English</li>
+          <li>Fix: The timer state is properly updated when using the skip button.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.0" date="2020-09-14">
+      <description>
+        <p>The second stable release of Solanum brings UI tweaks, usability improvements, and new features:</p>
+        <ul>
+          <li>A skip button has been added, so you can use other time tracking methods in addition to Solanum.</li>
+          <li>The start button now plays a small chime, so you know that Solanum will give auditory cues as you work.</li>
+          <li>Keywords have been added so Solanum can be found more easily on your desktop.</li>
+          <li>The entire window is now draggable instead of just the top.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.1" date="2020-09-09"/>
+    <release version="1.0.0" date="2020-09-05"/>
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>

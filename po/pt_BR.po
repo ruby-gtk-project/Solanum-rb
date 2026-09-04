@@ -1,0 +1,219 @@
+# Brazilian Portuguese translation for solanum.
+# Copyright (C) 2022 solanum's COPYRIGHT HOLDER
+# This file is distributed under the same license as the solanum package.
+# Gabriel Longo <gabriel.longo.gabriel@gmail.com>, 2020.
+# Enrico Nicoletto <hiko@duck.com>, 2020-2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: solanum main\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/Solanum/issues\n"
+"POT-Creation-Date: 2024-07-04 12:00+0000\n"
+"PO-Revision-Date: 2024-07-06 21:48-0300\n"
+"Last-Translator: Leônidas Araújo <leorusvellt@hotmail.com>\n"
+"Language-Team: Brazilian Portuguese <gnome-pt_br-list@gnome.org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.4.2\n"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:7
+#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:78 src/window.rs:307
+msgid "Solanum"
+msgstr "Solanum"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:8
+msgid "Balance working time and break time"
+msgstr "Balanceie o tempo de trabalho e intervalo"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:10
+msgid ""
+"Solanum is a time tracking app that uses the pomodoro technique. Work in 4 "
+"sessions, with breaks in between each session and one long break after all 4."
+msgstr ""
+"Solanum é um aplicativo de monitoramento de tempo que faz uso da técnica "
+"Pomodoro. Trabalhe em quatro sessões com intervalos curtos entre cada uma "
+"delas e um intervalo longo depois um ciclo completo."
+
+#. Translators: please do NOT translate this
+#: data/org.gnome.Solanum.appdata.xml.in.in:30
+msgid "Christopher Davis"
+msgstr "Christopher Davis"
+
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+#: data/org.gnome.Solanum.desktop.in.in:12
+msgid "Pomodoro;Timer;Productivity;"
+msgstr "Pomodoro;Temporizador;Produtividade;"
+
+#: data/org.gnome.Solanum.gschema.xml:6
+msgid "The length of a work lap in minutes."
+msgstr "O comprimento de uma série de trabalho em minutos."
+
+#: data/org.gnome.Solanum.gschema.xml:10
+msgid "The length of a short break in minutes."
+msgstr "O comprimento de um intervalo curto em minutos."
+
+#: data/org.gnome.Solanum.gschema.xml:14
+msgid "The length of a long break in minutes."
+msgstr "O comprimento de um intervalo longo em minutos."
+
+#: data/org.gnome.Solanum.gschema.xml:18
+msgid "The number of sessions until a long break."
+msgstr "O número de sessões até chegar o intervalo longo."
+
+#: data/org.gnome.Solanum.gschema.xml:22
+msgid "Whether the window should fullscreen during breaks."
+msgstr "Se a janela deve ficar em tela cheia durante os intervalos."
+
+#: data/gtk/help-overlay.blp:8
+msgctxt "shortcut window"
+msgid "General Shortcuts"
+msgstr "Atalhos gerais"
+
+#: data/gtk/help-overlay.blp:11
+msgctxt "shortcut window"
+msgid "Show Primary Menu"
+msgstr "Exibe o menu principal"
+
+#: data/gtk/help-overlay.blp:16
+msgctxt "shortcut window"
+msgid "Show Preferences"
+msgstr "Mostra preferências"
+
+#: data/gtk/help-overlay.blp:21
+msgctxt "shortcut window"
+msgid "Show Keyboard Shortcuts"
+msgstr "Exibe os atalhos de teclado"
+
+#: data/gtk/help-overlay.blp:26
+msgctxt "shortcut window"
+msgid "Quit"
+msgstr "Fecha"
+
+#: data/ui/preferences-window.blp:9
+msgid "Session Length"
+msgstr "Comprimento da sessão"
+
+#: data/ui/preferences-window.blp:10
+msgid ""
+"The length of each session type in minutes. Changes apply to the next "
+"session of each type."
+msgstr ""
+"O comprimento de cada tipo de sessão em minutos. As alterações se aplicam à "
+"próxima sessão de cada tipo."
+
+#: data/ui/preferences-window.blp:13
+msgid "Lap Length"
+msgstr "Comprimento da série"
+
+#: data/ui/preferences-window.blp:23
+msgid "Short Break Length"
+msgstr "Comprimento do intervalo curto"
+
+#: data/ui/preferences-window.blp:33
+msgid "Long Break Length"
+msgstr "Comprimento do intervalo longo"
+
+#: data/ui/preferences-window.blp:45
+msgid "Sessions Until Long Break"
+msgstr "Sessões até o intervalo longo"
+
+#: data/ui/preferences-window.blp:57
+msgid "Fullscreen During Breaks"
+msgstr "Tela cheia durante os intervalos"
+
+#: data/ui/window.blp:40
+msgid "Toggle Timer"
+msgstr "Alternar temporizador"
+
+#: data/ui/window.blp:48 src/window.rs:325
+msgid "Skip"
+msgstr "Pular"
+
+#: data/ui/window.blp:59
+msgid "Main Menu"
+msgstr "Menu Principal"
+
+#: data/ui/window.blp:74
+msgid "Reset Sessions"
+msgstr "Restaurar sessões"
+
+#: data/ui/window.blp:78
+msgid "_Preferences"
+msgstr "_Preferências"
+
+#: data/ui/window.blp:79
+msgid "_Keyboard Shortcuts"
+msgstr "_Atalhos de teclado"
+
+#: data/ui/window.blp:80
+msgid "_About Solanum"
+msgstr "_Sobre o Solanum"
+
+#: src/app.rs:165
+msgid "translator-credits"
+msgstr ""
+"Gabriel Longo <gabriel.longo.gabriel@gmail.com>\n"
+"Enrico Nicoletto <hiko@duck.com>\n"
+"Leônidas Araújo <leorusvellt@hotmail.com>"
+
+#: src/app.rs:174
+msgid "_Donate on Patreon"
+msgstr "_Doar no Patreon"
+
+#: src/app.rs:178
+msgid "_Sponsor on GitHub"
+msgstr "Pa_trocínio no GitHub"
+
+#: src/app.rs:183
+msgid "Icon by"
+msgstr "Ícones por"
+
+#: src/app.rs:187
+msgid "Sound by"
+msgstr "Sons por"
+
+#: src/app.rs:192
+msgid "Supported by"
+msgstr "Suportado por"
+
+#: src/window.rs:222
+msgid "Long Break"
+msgstr "Intervalo longo"
+
+#: src/window.rs:228
+msgid "Short Break"
+msgstr "Intervalo curto"
+
+#: src/window.rs:311
+msgid "Back to Work"
+msgstr "Voltar ao trabalho"
+
+#: src/window.rs:312
+msgid "Ready to keep working?"
+msgstr "Pronto para voltar ao trabalho?"
+
+#: src/window.rs:313
+msgid "Start Working"
+msgstr "Começar a trabalhar"
+
+#: src/window.rs:316
+msgid "Break Time"
+msgstr "Intervalo"
+
+#: src/window.rs:317
+msgid "Stretch your legs, and drink some water."
+msgstr "Estique as pernas e beba um pouco de água."
+
+#: src/window.rs:318
+msgid "Start Break"
+msgstr "Começar intervalo"
+
+# Em uma tradução livre, "Sessão" parece se enquadrar melhor a proposta do aplicativo do que "Volta". Talvez traduzir para série ou rodada?
+#: src/window.rs:338
+msgid "Lap {}"
+msgid_plural "Lap {}"
+msgstr[0] "Série {}"
+msgstr[1] "Séries {}"

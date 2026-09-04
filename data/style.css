@@ -1,0 +1,48 @@
+/* Ported from upstream's data/ui/style.css.
+ *
+ * The only change: upstream writes the two keyframe colours as
+ * var(--accent-color) and var(--view-fg-color). GTK 4.22 fails to resolve a
+ * custom property inside @keyframes and emits four "is not a valid color name"
+ * parser errors for every animation frame — around 200 a second while the
+ * countdown blinks. libadwaita's @accent_color and @view_fg_color name the
+ * same colours and resolve cleanly.
+ */
+button.large {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.main_box {
+  padding: 24px;
+}
+
+.blinking {
+  animation: blinkingText 1.2s infinite;
+}
+
+.blinking:backdrop {
+  animation: none;
+}
+
+@keyframes blinkingText {
+  0% {
+    color: @accent_color;
+  }
+  50% {
+    color: @view_fg_color;
+    opacity: 0.5;
+  }
+  100% {
+    color: @accent_color;
+  }
+}
+
+.timer-label {
+  font-size: 400%;
+  font-weight: 300;
+  font-feature-settings: "tnum" 1;
+}
+
+.large-timer {
+  font-size:  600%;
+}

@@ -1,0 +1,221 @@
+# Slovenian translation for solanum.
+# Copyright (C) 2020 solanum's COPYRIGHT HOLDER
+# This file is distributed under the same license as the solanum package.
+#
+# Matej Urbančič <mateju@svn.gnome.org>, 2020–2021.
+# Martin Srebotnjak <miles@filmsi.net>, 2022-.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: solanum main\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/Solanum/issues\n"
+"POT-Creation-Date: 2024-07-04 12:00+0000\n"
+"PO-Revision-Date: 2024-07-04 23:42+0200\n"
+"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
+"Language-Team: Slovenian GNOME Translation Team <gnome-si@googlegroups.com>\n"
+"Language: sl_SI\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
+"%100==4 ? 3 : 0);\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Generator: Poedit 2.2.1\n"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:7
+#: data/org.gnome.Solanum.desktop.in.in:3 src/app.rs:78 src/window.rs:307
+msgid "Solanum"
+msgstr "Solanum"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:8
+msgid "Balance working time and break time"
+msgstr "Usklajevanje delovnega časa in premorov"
+
+#: data/org.gnome.Solanum.appdata.xml.in.in:10
+msgid ""
+"Solanum is a time tracking app that uses the pomodoro technique. Work in 4 "
+"sessions, with breaks in between each session and one long break after all 4."
+msgstr ""
+"Program Solanum je namenjen spremljanju časa po tehniki pomodoro. Po tem "
+"načinu je delo razdeljeno na 4 dele z vmesnimi krajšimi in enim daljšim "
+"premorom po koncu dejavnosti."
+
+#. Translators: please do NOT translate this
+#: data/org.gnome.Solanum.appdata.xml.in.in:30
+msgid "Christopher Davis"
+msgstr "Christopher Davis"
+
+#. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+#: data/org.gnome.Solanum.desktop.in.in:12
+msgid "Pomodoro;Timer;Productivity;"
+msgstr "Pomodoro;Timer;Productivity;Časovnik;Delo;Premori;Pavza;Počitek;"
+
+#: data/org.gnome.Solanum.gschema.xml:6
+msgid "The length of a work lap in minutes."
+msgstr "Trajanje delovnega kroga v minutah."
+
+#: data/org.gnome.Solanum.gschema.xml:10
+msgid "The length of a short break in minutes."
+msgstr "Trajanje kratkega premora v minutah."
+
+#: data/org.gnome.Solanum.gschema.xml:14
+msgid "The length of a long break in minutes."
+msgstr "Trajanje dolgega premora v minutah."
+
+#: data/org.gnome.Solanum.gschema.xml:18
+msgid "The number of sessions until a long break."
+msgstr "Število delov do daljšega odmora."
+
+#: data/org.gnome.Solanum.gschema.xml:22
+msgid "Whether the window should fullscreen during breaks."
+msgstr "Ali naj okno med odmori celozaslonsko."
+
+#: data/gtk/help-overlay.blp:8
+msgctxt "shortcut window"
+msgid "General Shortcuts"
+msgstr "Splošne bližnjice"
+
+#: data/gtk/help-overlay.blp:11
+msgctxt "shortcut window"
+msgid "Show Primary Menu"
+msgstr "Pokaže osnovni meni"
+
+#: data/gtk/help-overlay.blp:16
+msgctxt "shortcut window"
+msgid "Show Preferences"
+msgstr "Pokaži nastavitve"
+
+#: data/gtk/help-overlay.blp:21
+msgctxt "shortcut window"
+msgid "Show Keyboard Shortcuts"
+msgstr "Pokaže tipkovne bližnjice"
+
+#: data/gtk/help-overlay.blp:26
+msgctxt "shortcut window"
+msgid "Quit"
+msgstr "Konča program"
+
+#: data/ui/preferences-window.blp:9
+msgid "Session Length"
+msgstr "Dolžina obdobja"
+
+#: data/ui/preferences-window.blp:10
+msgid ""
+"The length of each session type in minutes. Changes apply to the next "
+"session of each type."
+msgstr ""
+"Dolžina vsake vrste dela v minutah. Spremembe se uveljavijo na naslednjem "
+"delu vsake vrste."
+
+#: data/ui/preferences-window.blp:13
+msgid "Lap Length"
+msgstr "Dolžina kroga"
+
+#: data/ui/preferences-window.blp:23
+msgid "Short Break Length"
+msgstr "Dolžina kratkega premora"
+
+#: data/ui/preferences-window.blp:33
+msgid "Long Break Length"
+msgstr "Dolžina dolgega premora"
+
+#: data/ui/preferences-window.blp:45
+msgid "Sessions Until Long Break"
+msgstr "Število delov do daljšega odmora"
+
+#: data/ui/preferences-window.blp:57
+msgid "Fullscreen During Breaks"
+msgstr "Celozaslonski način med odmori"
+
+#: data/ui/window.blp:40
+msgid "Toggle Timer"
+msgstr "Preklopi časovnik"
+
+#: data/ui/window.blp:48 src/window.rs:325
+msgid "Skip"
+msgstr "Preskoči"
+
+#: data/ui/window.blp:59
+msgid "Main Menu"
+msgstr "Glavni meni"
+
+#: data/ui/window.blp:74
+msgid "Reset Sessions"
+msgstr "Ponastavi seje"
+
+#: data/ui/window.blp:78
+msgid "_Preferences"
+msgstr "_Nastavitve"
+
+#: data/ui/window.blp:79
+msgid "_Keyboard Shortcuts"
+msgstr "_Tipkovne bližnjice"
+
+#: data/ui/window.blp:80
+msgid "_About Solanum"
+msgstr "_O programu"
+
+#: src/app.rs:165
+msgid "translator-credits"
+msgstr ""
+"Matej Urbančič <mateju@src.gnome.org>,Martin Srebotnjak <miles@filmsi.net>"
+
+#: src/app.rs:174
+msgid "_Donate on Patreon"
+msgstr "_Podpora prek sistema Patreon"
+
+#: src/app.rs:178
+msgid "_Sponsor on GitHub"
+msgstr "_Sponzorstvo na GitHubu"
+
+#: src/app.rs:183
+msgid "Icon by"
+msgstr "Avtor/ica ikone"
+
+#: src/app.rs:187
+msgid "Sound by"
+msgstr "Avtor/ica zvoka"
+
+#: src/app.rs:192
+msgid "Supported by"
+msgstr "Podpornik_ca"
+
+#: src/window.rs:222
+msgid "Long Break"
+msgstr "Dolg premor"
+
+#: src/window.rs:228
+msgid "Short Break"
+msgstr "Kratek premor"
+
+#: src/window.rs:311
+msgid "Back to Work"
+msgstr "Nazaj na delo"
+
+#: src/window.rs:312
+msgid "Ready to keep working?"
+msgstr "Ali ste pripravljeni nadaljevati z delom?"
+
+#: src/window.rs:313
+msgid "Start Working"
+msgstr "Začnite z delom"
+
+#: src/window.rs:316
+msgid "Break Time"
+msgstr "Čas je za premor"
+
+#: src/window.rs:317
+msgid "Stretch your legs, and drink some water."
+msgstr "Raztegnite si noge, popite kozarec vode."
+
+#: src/window.rs:318
+msgid "Start Break"
+msgstr "Začnite s premorom"
+
+#: src/window.rs:338
+msgid "Lap {}"
+msgid_plural "Lap {}"
+msgstr[0] "Krog {}"
+msgstr[1] "Krog {}"
+msgstr[2] "Krog {}"
+msgstr[3] "Krog {}"

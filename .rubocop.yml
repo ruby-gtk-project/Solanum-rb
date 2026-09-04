@@ -19,6 +19,7 @@ AllCops:
     - examples/**/*
     - result
     - vendor/**/*
+    - test/gtk_driver.rb   # from the ruby-gtk-testing skill, plus the paintable fix
     - tmp/**/*
     - node_modules/**/*
     - app/javascript/**/*
