@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2020 Christopher Davis <christopherdavis@gnome.org> -->
 <component type="desktop-application">
-  <id>org.gnome.Solanum.Rb</id>
+  <id>@APP_ID@</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  <name>Solanum</name>
+  <name>Solanum@NAME_SUFFIX@</name>
   <summary>Balance working time and break time</summary>
   <description>
     <p>
@@ -20,7 +20,7 @@
       <image type="source">https://gitlab.gnome.org/World/Solanum/-/raw/main/data/screenshots/screenshot-2.png</image>
     </screenshot>
   </screenshots>
-  <launchable type="desktop-id">org.gnome.Solanum.Rb.desktop</launchable>
+  <launchable type="desktop-id">@APP_ID@.desktop</launchable>
   <url type="homepage">https://apps.gnome.org/Solanum</url>
   <url type="bugtracker">https://gitlab.gnome.org/World/Solanum/-/issues</url>
   <url type="donation">https://patreon.com/chrisgnome</url>

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'solanum_rb/config'
+require_relative 'solanum_rb/appdata'
 require_relative 'solanum_rb/i18n'
 require_relative 'solanum_rb/paths'
 require_relative 'solanum_rb/settings'

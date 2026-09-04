@@ -16,14 +16,33 @@ stylesheet or the shortcuts dialog.
 | `data/gtk/help-overlay.blp` | `lib/solanum_rb/shortcuts_dialog.rb` |
 | the `AboutWindow::from_appdata` call in `src/app.rs` | `lib/solanum_rb/about_dialog.rb` |
 | `src/i18n.rs` + gettext | `lib/solanum_rb/i18n.rb` |
-| `src/config.rs` | constants on the classes that use them |
+| `src/config.rs` + meson's profile logic | `lib/solanum_rb/config.rb` |
+| `adw_about_dialog_new_from_appdata` | `lib/solanum_rb/appdata.rb` |
+| meson's `i18n.merge_file` | `scripts/merge_translations.rb`, via `rake desktop` |
+| meson's three `test(...)` calls | `rake validate` |
 | `data/*.gschema.xml` | same file, plus `lib/solanum_rb/settings.rb` |
 | GResource | `data/` read off disk, via `lib/solanum_rb/paths.rb` |
 
 Everything upstream has is here: both dialogs, the shortcuts window, the about
 window, all five preferences, all five app actions and four window actions, the
 primary menu, the two accelerators, the breakpoint, the timer notification with
-both of its buttons, the fullscreen-break behaviour, and the beep and chime.
+both of its buttons, the fullscreen-break behaviour, the beep and chime, the
+default widget, the development profile, the translated desktop entry and
+metainfo, and the three validation checks meson runs.
+
+## The development profile
+
+Upstream's `-Dprofile=development`. There is no configure step here, so it
+comes from the environment: `SOLANUM_RB_PROFILE=development`, or
+`nix build .#devel`. It gives the same things meson's does — the `.Devel`
+application id, its own icon, the `devel` style class that stripes the header
+bar, the ` ☢` name suffix, and a version stamped with the short commit — so a
+devel build installs and runs alongside a release one.
+
+`name_suffix` is defined in upstream's `meson.build` and never referenced by
+any rule there, so upstream's devel build does not actually get the marker.
+It is wired up here, since a devel profile that does not mark itself is the
+thing the variable was added for.
 
 ## Things that are deliberately not a translation of upstream
 
@@ -47,12 +66,27 @@ deprecates the old widget, and the Ruby bindings cannot construct it at all —
 `Gtk::ShortcutsWindow.new` raises `GtkWindow is not subtype of
 GtkShortcutsWindow`.
 
+**No `i18n.merge_file`.** Upstream folds `po/*.po` back into the desktop entry
+and the metainfo at build time, so the app's name, keywords, summary and
+description are localised in the shell and the software centre.
+`scripts/merge_translations.rb` does the same job — 47 languages — and
+`rake desktop` runs it. The generated files are build outputs, not tracked;
+the nix build makes its own.
+
 **No gettext.** There is no gettext binding in the Ruby GTK stack, so
 `I18n` reads the `po/*.po` files directly. It handles `msgctxt` (the
 help-overlay strings need it) and takes `msgstr[0]` for plural entries — every
 plural msgid in this catalogue has an identical `msgid_plural`, so the
 singular form covers both. A real Plural-Forms evaluator would be needed only
 if that stops being true.
+
+**The about dialog reads the metainfo itself.** Upstream calls
+`adw_about_dialog_new_from_appdata`, which parses the metainfo out of a
+GResource. `Appdata` reads the same generated file off disk and fills the same
+fields — name, developer, licence, description, homepage, issue url and the
+release notes for this version. Every one falls back to the value upstream
+would have shown anyway, so a checkout where `rake desktop` has not run gets a
+plainer dialog rather than an empty one.
 
 **GStreamer through `playbin`, not `GstPlay`.** Upstream uses `gstreamer_play`;
 the Ruby `gstreamer` gem exposes the pipeline one layer down. `Gtk::MediaFile`
@@ -104,10 +138,21 @@ first and raises a Ruby error naming the fix.
 `$out/share/glib-2.0/schemas` to `$out/share/gsettings-schemas/$name/…`, so the
 wrapper has to put *that* directory on `XDG_DATA_DIRS`, not just `$out/share`.
 
+**Ruby reads files in the ambient encoding.** A nix builder has no locale, so
+the default is US-ASCII and reading a UTF-8 PO file or the stylesheet raises on
+the first accented character — which is also what `LANG=C LANGUAGE=fr` would
+have done to a user. Every read of a shipped file names UTF-8 explicitly, and
+`test/test_units.rb` reads a French catalogue with the locale unset.
+
+**`data/style.css` names a class the window never applies.** The padding rule
+is written `.main_box` upstream while the window applies `main-box`, so its
+24px padding has never taken effect. It is spelled `.main-box` here, so the
+rule does what it asks for.
+
 ## Carried over from upstream unchanged
 
-`data/style.css` defines `.main_box`, but the window applies `main-box`, so
-that 24px padding has never taken effect. It is left as-is: fixing it would
-change how the app looks relative to upstream.
-
 The countdown separator is U+2236 RATIO, not a colon, as upstream uses.
+
+The GSettings schema id has no profile suffix: upstream installs the same
+`org.gnome.Solanum` schema for both builds, so a devel build shares the
+release build's settings.

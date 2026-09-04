@@ -5,6 +5,8 @@
 
 require 'tmpdir'
 
+require_relative '../lib/solanum_rb/appdata'
+require_relative '../lib/solanum_rb/config'
 require_relative '../lib/solanum_rb/i18n'
 require_relative '../lib/solanum_rb/timer'
 
@@ -131,18 +133,136 @@ section('the catalogue') do
 
   use_locale('xx_YY')
   check('an unshipped locale falls back to nothing') { I.language.nil? }
+
+  # A process with no usable locale still has to be able to read a UTF-8
+  # catalogue: Ruby would otherwise open it as US-ASCII and raise on the
+  # first accented character. This is what the nix build runs as.
+  check('a catalogue reads under a C locale') do
+    %w[LANGUAGE LC_ALL LC_MESSAGES LANG].each { |var| ENV.delete(var) }
+    I.reset!
+    I.parse_po(File.expand_path('../po/fr.po', __dir__))['Long Break'] == 'Pause longue'
+  end
+
+  # Leaving a bogus LC_ALL set makes every later subshell warn about it.
+  use_locale('C')
+end
+
+# Upstream's -Dprofile switch. Both profiles have to be reachable from one
+# process, so each check sets the variable itself.
+def with_profile(value)
+  ENV['SOLANUM_RB_PROFILE'] = value
+  yield
+ensure
+  ENV.delete('SOLANUM_RB_PROFILE')
+end
+
+section('the build profile') do
+  C = SolanumRb::Config
+
+  with_profile(nil) do
+    check('the default build is not a devel one') { !C.development? }
+    check('and uses the plain application id') { C.app_id == 'org.gnome.Solanum.Rb' }
+    check('with no name suffix') { C.name_suffix == '' }
+    check('and the plain version') { C.version == '6.0.0' }
+  end
+
+  with_profile('development') do
+    check('the devel build is one') { C.development? }
+    check('and suffixes the application id') { C.app_id == 'org.gnome.Solanum.Rb.Devel' }
+    check('and marks its name') { C.name_suffix == ' ☢' }
+    check('and stamps the commit into the version') { C.version.start_with?('6.0.0-') }
+  end
+
+  check('the copyright year is upstream\'s, not this year') { C::COPYRIGHT == '2022' }
+
+  # Both profiles' icons have to exist or the shell shows a blank tile.
+  %w[org.gnome.Solanum.Rb org.gnome.Solanum.Rb.Devel].each do |id|
+    check("#{id} has a scalable icon") do
+      File.exist?("data/icons/hicolor/scalable/apps/#{id}.svg")
+    end
+    check("#{id} has a symbolic icon") do
+      File.exist?("data/icons/hicolor/symbolic/apps/#{id}-symbolic.svg")
+    end
+  end
+end
+
+# These are what the about dialog shows; upstream lifts them out of the
+# metainfo with adw_about_dialog_new_from_appdata.
+section('the appdata reader') do
+  appdata = SolanumRb::Appdata.new
+
+  check('the generated metainfo is there') { appdata.available? }
+  check('the name') { appdata.field(:name) == 'Solanum' }
+  check('the summary') { appdata.field(:summary) == 'Balance working time and break time' }
+  check('the licence') { appdata.field(:license) == 'GPL-3.0-or-later' }
+  check('the developer') { appdata.field(:developer_name) == 'Christopher Davis' }
+  check('the homepage') { appdata.url('homepage') == 'https://apps.gnome.org/Solanum' }
+  check('the bugtracker') { appdata.url('bugtracker').include?('gitlab.gnome.org') }
+  check('a url that is not there') { appdata.url('nonexistent').nil? }
+
+  check('the description is flattened to one line') do
+    appdata.description == 'Solanum is a time tracking app that uses the pomodoro ' \
+                           'technique. Work in 4 sessions, with breaks in between each ' \
+                           'session and one long break after all 4.'
+  end
+
+  check('the release notes for this version') do
+    appdata.release_notes.to_s.include?("The timer's text now scales with window size")
+  end
+  check('an unknown version has no release notes') { appdata.release_notes('0.0.1').nil? }
+
+  # The untranslated element must win over its xml:lang siblings — the locale
+  # is applied by I18n, not by picking a translated element out of the file.
+  check('a translated sibling is not picked up') do
+    appdata.field(:summary) !~ /[^\x00-\x7F]/
+  end
+end
+
+section('the generated desktop entry and metainfo') do
+  desktop = File.read('build/generated/org.gnome.Solanum.Rb.desktop', encoding: 'UTF-8')
+  metainfo = File.read('build/generated/org.gnome.Solanum.Rb.metainfo.xml', encoding: 'UTF-8')
+
+  check('the application id is substituted') { desktop.include?('Icon=org.gnome.Solanum.Rb') }
+  check('no placeholder survives in the desktop entry') { !desktop.include?('@') }
+  check('no placeholder survives in the metainfo') { !metainfo.include?('@APP_ID@') }
+  check('the name suffix is empty for a default build') do
+    desktop.include?("\nName=Solanum\n")
+  end
+  check('keywords are localised') { desktop.include?('Keywords[fr]=Pomodoro;Minuteur;') }
+  check('the summary is localised') { metainfo.include?('<summary xml:lang="de">') }
+  check('the multi-line description is localised') do
+    metainfo.include?('<p xml:lang="fr">Solanum est une application')
+  end
+  # Upstream's catalogues cover four appdata strings — the name, the summary,
+  # the description and the developer's name — and not the release notes. A
+  # sibling is only ever added where a translation exists, so the release
+  # notes stay monolingual here too.
+  check('release notes get no empty translations') { !metainfo.include?('<li xml:lang=') }
+  check('the developer name is carried through untranslated') do
+    metainfo.include?('<name xml:lang="fr">Christopher Davis</name>')
+  end
+  check('the launchable points at the desktop entry') do
+    metainfo.include?('<launchable type="desktop-id">org.gnome.Solanum.Rb.desktop</launchable>')
+  end
 end
 
 section('the stylesheet') do
   # Comments are stripped first: the file's header explains the change by
   # quoting the very syntax this check bans.
-  css = File.read(File.expand_path('../data/style.css', __dir__)).gsub(%r{/\*.*?\*/}m, '')
+  css = File.read(File.expand_path('../data/style.css', __dir__), encoding: 'UTF-8')
+            .gsub(%r{/\*.*?\*/}m, '')
 
   # GTK 4.22 cannot resolve a custom property inside @keyframes: it emits four
   # parser errors per animation frame, so the blinking countdown floods the
   # log. libadwaita's @-named colours are used instead.
   check('no var() custom properties') { !css.include?('var(') }
   check('the blink keyframes are still there') { css.include?('@keyframes blinkingText') }
+
+  # Upstream writes this rule as `.main_box` while the window applies
+  # `main-box`, so its padding has never taken effect.
+  check('the padding rule matches the class the window applies') do
+    css.include?('.main-box {') && !css.include?('.main_box {')
+  end
 end
 
 puts

@@ -6,13 +6,17 @@
  * parser errors for every animation frame — around 200 a second while the
  * countdown blinks. libadwaita's @accent_color and @view_fg_color name the
  * same colours and resolve cleanly.
+ *
+ * The padding rule is spelled `.main_box` upstream while the window applies
+ * `main-box`, so it has never taken effect. Written here as `.main-box`, so
+ * the 24px padding the rule asks for is actually applied.
  */
 button.large {
   min-width: 48px;
   min-height: 48px;
 }
 
-.main_box {
+.main-box {
   padding: 24px;
 }
 

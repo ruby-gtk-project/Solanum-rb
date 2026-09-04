@@ -25,16 +25,26 @@ librsvg and the bundled gems from `gemset.nix`. Regenerate that file with
 `bundix -l` whenever `Gemfile.lock` moves; nix only sees git-tracked files, so
 `git add` it first.
 
-- `bin/solanum-rb` runs the app.
-- `rake` runs the checks and rubocop.
+- `bin/solanum-rb` runs the app. `SOLANUM_RB_PROFILE=development` gives the
+  devel build — own app id and icon, striped header, commit-stamped version.
+- `rake` runs the checks, the validation and rubocop.
   - `rake schema` compiles `data/org.gnome.Solanum.Rb.gschema.xml` into
     `build/`, which the dev shell puts on `XDG_DATA_DIRS`. Nothing that touches
     settings works until this has run; `rake test` depends on it.
+  - `rake desktop` regenerates the desktop entry and metainfo from `po/`, for
+    both profiles. They are build outputs, not tracked — the nix build makes
+    its own. The about dialog reads the metainfo back at runtime.
+  - `rake validate` runs the three checks upstream runs from meson:
+    `glib-compile-schemas --strict`, `desktop-file-validate` and
+    `appstreamcli validate`.
   - `test/test_units.rb` needs no display: the countdown arithmetic, the PO
-    catalogue and the stylesheet.
+    catalogue, the build profile, the appdata reader, the generated data files
+    and the stylesheet.
   - `test/drive_solanum.rb` builds the real window headlessly, drives every
     state and every dialog, and writes screenshots to `tmp/shots`.
-- `nix build` produces the installable app.
+    `test/drive_devel.rb` does the same for the devel profile, which needs its
+    own process because the profile is read before the application id is built.
+- `nix build` produces the installable app, `nix build .#devel` the devel one.
 
 `PORTING.md` records how this port maps onto the Rust original and the
 ruby-gnome and GTK defects found while writing it — read it before changing the

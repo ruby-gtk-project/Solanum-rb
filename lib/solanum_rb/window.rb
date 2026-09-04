@@ -3,6 +3,7 @@
 require 'gtk4'
 require 'adwaita'
 
+require_relative 'config'
 require_relative 'i18n'
 require_relative 'settings'
 require_relative 'shortcuts_dialog'
@@ -17,7 +18,6 @@ module SolanumRb
   class Window
     include I18n
 
-    APP_ID = 'org.gnome.Solanum.Rb'
     POMODORO = :pomodoro
     BREAK = :break
 
@@ -55,6 +55,10 @@ module SolanumRb
         end
 
         win.add_breakpoint(large_text_breakpoint)
+        # Upstream's `default-widget: timer_button`: Enter starts and stops
+        # the countdown without having to tab to the button first.
+        win.default_widget = timer_button
+        apply_devel_style
         install_actions
         start_lap(POMODORO, reset_count: true)
         # Building the pipeline scans the GStreamer plugin registry, which
@@ -288,12 +292,23 @@ module SolanumRb
 
     # --- the widget tree ---------------------------------------------------
 
+    # A development build is visibly striped, so it is never mistaken for the
+    # installed one.
+    def apply_devel_style
+      case Config.development?
+      when true then window.add_css_class('devel')
+      end
+    end
+
     def window
       @window ||= Adwaita::ApplicationWindow.new(application).tap do |win|
         win.title = _('Solanum')
-        win.icon_name = APP_ID
+        win.icon_name = Config.app_id
         win.set_default_size(360, 360)
         win.height_request = 294
+        # Upstream sets this in `SolanumWindow::new`, so the shell has an icon
+        # for any window the app opens, not just this one.
+        Gtk::Window.set_default_icon_name(Config.app_id)
       end
     end
 

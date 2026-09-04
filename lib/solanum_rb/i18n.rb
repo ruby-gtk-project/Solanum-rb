@@ -70,11 +70,16 @@ module SolanumRb
 
     # A deliberately small PO parser: msgctxt/msgid/msgstr entries with
     # continuation lines. Fuzzy entries are dropped the way gettext drops them.
+    #
+    # The encoding is named explicitly: PO files are UTF-8, but Ruby reads
+    # them in the ambient one, which is US-ASCII under a C locale — so
+    # `LANG=C LANGUAGE=fr`, or any process with no locale set at all, would
+    # otherwise raise on the first accented character.
     def parse_po(path)
       {}.tap do |catalogue|
         entry = new_entry
 
-        File.foreach(path) do |line|
+        File.foreach(path, encoding: 'UTF-8') do |line|
           entry = consume(catalogue, entry, line.chomp)
         end
 

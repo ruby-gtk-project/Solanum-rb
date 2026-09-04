@@ -13,6 +13,19 @@ ENV['GSETTINGS_BACKEND'] = 'memory'
 require_relative '../lib/solanum_rb'
 require_relative 'gtk_driver'
 
+# A resize is not applied on the turn it is asked for, and after the fullscreen
+# round trip it can take several. Pumping the main context until the window
+# reports the size makes the breakpoint steps deterministic instead of
+# depending on how much a single 500ms tick happened to get through.
+def settle_until(limit = 200)
+  limit.times do
+    case yield
+    when true then break
+    else GLib::MainContext.default.iteration(false)
+    end
+  end
+end
+
 app = SolanumRb::Application.new
 win = nil
 settings = nil
@@ -38,6 +51,14 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
       win.timer_button.has_css_class?('suggested-action')
     end
     d.check('skip is available while stopped') { win.window.lookup_action('skip').enabled? }
+    # Upstream's `default-widget: timer_button` — Enter starts the countdown.
+    d.check('the timer button is the default widget') do
+      win.window.default_widget == win.timer_button
+    end
+    d.check('a release build is not striped') { !win.window.has_css_class?('devel') }
+    d.check('the window carries the application icon') do
+      win.window.icon_name == 'org.gnome.Solanum.Rb'
+    end
     # Baseline for the breakpoint check further down.
     small_timer_height = win.timer_label.measure(:vertical, -1)[1]
     d.check('the countdown has a height to compare against') { small_timer_height.positive? }
@@ -206,6 +227,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   # actually being ported.
   d.step('growing the window past the breakpoint') do
     win.window.set_default_size(900, 900)
+    settle_until { win.window.width >= 900 }
   end
 
   d.step('the large-text breakpoint applies') do
@@ -221,6 +243,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
 
   d.step('shrinking it back') do
     win.window.set_default_size(360, 360)
+    settle_until { win.window.width <= 360 }
   end
 
   d.step('and the breakpoint unapplies') do
@@ -284,6 +307,34 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
     d.check('a dialog is showing') { !win.window.visible_dialog.nil? }
     d.check('it is the about dialog') do
       win.window.visible_dialog.is_a?(Adwaita::AboutDialog)
+    end
+
+    # Upstream fills these from the metainfo via
+    # adw_about_dialog_new_from_appdata; here Appdata reads the same file.
+    win.window.visible_dialog.then do |about|
+      d.check('the name comes from the appdata') { about.application_name == 'Solanum' }
+      d.check('the developer comes from the appdata') do
+        about.developer_name == 'Christopher Davis'
+      end
+      d.check('the licence comes from the appdata') do
+        about.license_type == Gtk::License::GPL_3_0
+      end
+      d.check('the description comes from the appdata') do
+        about.comments.start_with?('Solanum is a time tracking app')
+      end
+      d.check('the website comes from the appdata') do
+        about.website == 'https://apps.gnome.org/Solanum'
+      end
+      d.check('the issue url comes from the appdata') do
+        about.issue_url.include?('gitlab.gnome.org')
+      end
+      d.check('the release notes come from the appdata') do
+        about.release_notes.to_s.include?('scales with window size')
+      end
+      d.check('the version is the build version') { about.version == '6.0.0' }
+      d.check("the copyright is upstream's year") do
+        about.copyright == '© 2022 Christopher Davis, et al.'
+      end
     end
     d.check('the window still has a size') { win.window.width.positive? }
     d.shot('11-about')

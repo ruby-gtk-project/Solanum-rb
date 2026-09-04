@@ -1,5 +1,6 @@
 /.direnv/
 /vendor/bundle/
 /result
+/result-*
 /build/
 /tmp/

@@ -15,5 +15,14 @@ module SolanumRb
     def stylesheet = File.join(data_dir, 'style.css')
 
     def po_dir = File.expand_path('../../po', __dir__)
+
+    # Where `rake desktop` writes the generated desktop entry and metainfo.
+    # The nix build installs them and points this at the install prefix, so
+    # both a checkout and an installed copy find the same files.
+    def generated(name) = File.join(generated_dir, name)
+
+    def generated_dir = ENV.fetch('SOLANUM_RB_GENERATED_DIR', default_generated_dir)
+
+    def default_generated_dir = File.expand_path('../../build/generated', __dir__)
   end
 end

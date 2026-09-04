@@ -4,6 +4,7 @@ require 'gtk4'
 require 'adwaita'
 
 require_relative 'about_dialog'
+require_relative 'config'
 require_relative 'i18n'
 require_relative 'paths'
 require_relative 'preferences_dialog'
@@ -16,7 +17,6 @@ module SolanumRb
   class Application
     include I18n
 
-    APP_ID = Window::APP_ID
 
     def build
       app.tap do |a|
@@ -87,14 +87,16 @@ module SolanumRb
     end
 
     def app
-      @app ||= Gtk::Application.new(APP_ID, :default_flags).tap do |a|
+      @app ||= Gtk::Application.new(Config.app_id, :default_flags).tap do |a|
         a.resource_base_path = '/org/gnome/Solanum/Rb'
       end
     end
 
     def css_provider
       @css_provider ||= Gtk::CssProvider.new.tap do |provider|
-        provider.load(data: File.read(Paths.stylesheet))
+        # Named explicitly: under a C locale Ruby would read this as
+        # US-ASCII and raise on the stylesheet's non-ASCII comment.
+        provider.load(data: File.read(Paths.stylesheet, encoding: 'UTF-8'))
       end
     end
   end

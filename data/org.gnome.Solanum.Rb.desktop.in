@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Solanum
+Name=Solanum@NAME_SUFFIX@
 Exec=solanum-rb
 # Translators: Do not translate or transliterate this text (this is an icon file name)!
-Icon=org.gnome.Solanum.Rb
+Icon=@APP_ID@
 Terminal=false
 Type=Application
 Categories=GTK;GNOME;Utility;
