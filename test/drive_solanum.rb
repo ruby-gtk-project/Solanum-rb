@@ -26,10 +26,50 @@ def settle_until(limit = 200)
   end
 end
 
+# Waits in real time, rather than spinning: `iteration(true)` blocks until a
+# source is ready, and a running timer has one every 100ms. The countdown
+# label only changes once a whole second of the lap has elapsed, which is
+# later than the driver's next turn — so the check has to wait for it instead
+# of assuming a tick has already landed.
+def settle_blocking(limit = 40)
+  limit.times do
+    case yield
+    when true then break
+    else GLib::MainContext.default.iteration(true)
+    end
+  end
+end
+
+# A window asked for 900x900 settles a few pixels short of it, so the
+# breakpoint steps compare against the threshold the breakpoint itself uses
+# rather than the number that was asked for.
+BREAKPOINT_SIZE = 800
+
+# Records the fullscreen requests the window makes.
+#
+# GTK only reports a surface as fullscreened once the window manager says so,
+# and an Xvfb session has none — nothing ever confirms the request, so
+# `fullscreened?` stays false however the port behaves. The request itself is
+# what is being ported, so it is what gets checked: these two wrappers
+# delegate to the real methods and keep a log of which was called.
+def record_fullscreen_requests(window)
+  [].tap do |requests|
+    %i[fullscreen unfullscreen].each do |name|
+      window.method(name).then do |original|
+        window.define_singleton_method(name) do
+          requests << name
+          original.call
+        end
+      end
+    end
+  end
+end
+
 app = SolanumRb::Application.new
 win = nil
 settings = nil
 small_timer_height = nil
+fullscreen_requests = nil
 
 GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   d.window { app.main_window.window }
@@ -56,6 +96,9 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
       win.window.default_widget == win.timer_button
     end
     d.check('a release build is not striped') { !win.window.has_css_class?('devel') }
+    # Upstream's `glib::set_application_name`: what a desktop environment
+    # calls the process, with no profile marker on a release build.
+    d.check('the application name is set') { GLib.application_name == 'Solanum' }
     d.check('the window carries the application icon') do
       win.window.icon_name == 'org.gnome.Solanum.Rb'
     end
@@ -87,6 +130,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
     end
     d.check('skip is refused while running') { !win.window.lookup_action('skip').enabled? }
     d.check('reset is refused while running') { !win.window.lookup_action('reset').enabled? }
+    settle_blocking { win.timer_label.label != '25∶00' }
     d.check('the countdown has moved off 25:00') { win.timer_label.label != '25∶00' }
     d.shot('02-running')
   end
@@ -198,12 +242,13 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   # We are on a break here, so starting the timer with the preference on
   # should take the window fullscreen.
   d.step('starting a break with fullscreen-break on') do
+    fullscreen_requests = record_fullscreen_requests(win.window)
     settings['fullscreen-break'] = true
     win.window.activate_action('toggle-timer', nil)
   end
 
   d.step('the break takes over the screen') do
-    d.check('the window is fullscreen') { win.window.fullscreened? }
+    d.check('the break asked for fullscreen') { fullscreen_requests == [:fullscreen] }
     # Pause, move on to a pomodoro, and start that instead.
     win.window.activate_action('toggle-timer', nil)
     win.window.activate_action('skip', nil)
@@ -211,9 +256,24 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   end
 
   d.step('and a pomodoro gives it back') do
-    d.check('the window is not fullscreen') { !win.window.fullscreened? }
+    d.check('the pomodoro asked for it back') do
+      fullscreen_requests == %i[fullscreen unfullscreen]
+    end
     win.window.activate_action('toggle-timer', nil)
     settings['fullscreen-break'] = false
+  end
+
+  # With the preference off neither lap touches the window state, which is the
+  # other half of upstream's `if fullscreen` branch.
+  d.step('and with the preference off the window is left alone') do
+    fullscreen_requests.clear
+    win.window.activate_action('skip', nil)
+    win.window.activate_action('toggle-timer', nil)
+  end
+
+  d.step('no fullscreen request was made') do
+    d.check('the window state was untouched') { fullscreen_requests.empty? }
+    win.window.activate_action('toggle-timer', nil)
   end
 
   # A fullscreen round trip leaves the offscreen surface without a size for a
@@ -227,11 +287,11 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   # actually being ported.
   d.step('growing the window past the breakpoint') do
     win.window.set_default_size(900, 900)
-    settle_until { win.window.width >= 900 }
+    settle_until { win.window.width >= BREAKPOINT_SIZE }
   end
 
   d.step('the large-text breakpoint applies') do
-    d.check('the window grew') { win.window.width >= 900 }
+    d.check('the window grew') { win.window.width >= BREAKPOINT_SIZE }
     d.check('the countdown grows') { win.timer_label.has_css_class?('large-timer') }
     d.check('and is really rendered larger') do
       win.timer_label.measure(:vertical, -1)[1] > small_timer_height

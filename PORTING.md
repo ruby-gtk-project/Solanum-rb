@@ -27,8 +27,9 @@ Everything upstream has is here: both dialogs, the shortcuts window, the about
 window, all five preferences, all five app actions and four window actions, the
 primary menu, the two accelerators, the breakpoint, the timer notification with
 both of its buttons, the fullscreen-break behaviour, the beep and chime, the
-default widget, the development profile, the translated desktop entry and
-metainfo, and the three validation checks meson runs.
+default widget, the development profile, the GLib application name the shell
+shows, the translated desktop entry and metainfo, and the three validation
+checks meson runs.
 
 ## The development profile
 
@@ -120,6 +121,37 @@ animation and only emits `clicked` on a later turn of the main loop, so several
 activations inside one test step collapse into one. `test/drive_solanum.rb`
 uses the button for the single-step wiring checks and activates the action
 directly when it needs several in a row.
+
+**GTK 4.22 will not initialize without a display.** `require 'gtk4'` raises
+`Gtk::InitError: failed to initialize GTK` when there is neither `DISPLAY` nor
+`WAYLAND_DISPLAY` — GTK4 has no offscreen backend, whatever the
+`ruby-gtk-testing` skill's harness comment says about rendering offscreen. The
+dev shell therefore carries `xvfb-run`, and `rake test` drives the app against
+it. The screen size is given explicitly — `-screen 0 1600x1200x24` — because
+the breakpoint steps grow the window to 800sp square, which does not fit on
+xvfb-run's 1280x1024 default, and a window that cannot grow never applies the
+breakpoint.
+
+**An Xvfb session has no window manager, so a fullscreen request is never
+confirmed.** `Gtk::Window#fullscreened?` reports the surface state the window
+manager hands back, and with no window manager it stays false however the app
+behaves — the X server honours a plain resize but knows nothing about EWMH
+states. The request is what is being ported, so `test/drive_solanum.rb` wraps
+`fullscreen`/`unfullscreen` on the window, delegating to the real methods and
+logging the calls, and checks that a break asks for fullscreen, a pomodoro
+asks for it back, and neither does so with the preference off.
+
+**A window settles a few pixels short of the size it was asked for.** Asking
+for 900x900 under Xvfb leaves `Gtk::Window#width` at 890, so the breakpoint
+steps compare against the 800 the breakpoint itself uses rather than the
+number that was asked for.
+
+**The countdown label changes a whole second after the timer starts**, not on
+the timer's first 100ms tick, since the label is the truncated remaining time.
+The driver's next turn comes 500ms after the start, so the check has to wait in
+real time for the label to move: `GLib::MainContext#iteration(true)` blocks
+until the next tick, which is what `settle_blocking` in
+`test/drive_solanum.rb` pumps.
 
 **`Gtk::WidgetPaintable` needs a frame before it observes its widget.** A
 freshly built one snapshots to nothing, which made screenshots fail at random.

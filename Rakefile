@@ -206,22 +206,29 @@ task validate: :desktop do
   sh "appstreamcli validate --no-net --explain #{File.join(GENERATED_DIR, "#{app_id}.metainfo.xml")}"
 end
 
+# Big enough for the window the breakpoint steps ask for.
+SCREEN = '-screen 0 1600x1200x24'
+
 desc 'Drive the app headlessly and check the parts that need no display'
 task test: %i[schema desktop] do
   puts "\n== test/test_units.rb"
   sh 'ruby', 'test/test_units.rb'
-  # No display needed — GTK4 renders the window to an offscreen surface, and
-  # the screenshots in tmp/shots come out the same as a real session's. The
-  # devel profile runs separately: it is chosen from the environment before
-  # the application id is built.
+  # GTK4 has no offscreen backend — gtk_init fails outright with no display —
+  # so the drive scripts run against the Xvfb the dev shell carries. `-a`
+  # picks a free display number, so a run never collides with a session that
+  # already has one. The screen is given explicitly because the breakpoint
+  # steps grow the window to 800sp square, which does not fit on xvfb-run's
+  # 1280x1024 default. The devel profile runs separately: it is chosen from
+  # the environment before the application id is built.
   %w[test/drive_solanum.rb test/drive_devel.rb].each do |script|
     puts "\n== #{script}"
-    sh({ 'DISPLAY' => nil, 'WAYLAND_DISPLAY' => nil }, 'ruby', script)
+    sh 'xvfb-run', '-a', '-s', SCREEN, 'ruby', script
   end
 end
 
 desc 'Run the application'
 task run: %i[schema desktop] do
+  # On a machine with no display server, prefix this with `xvfb-run -a`.
   sh 'exe/solanum-rb'
 end
 

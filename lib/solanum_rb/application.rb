@@ -17,7 +17,6 @@ module SolanumRb
   class Application
     include I18n
 
-
     def build
       app.tap do |a|
         a.signal_connect('startup') do
@@ -25,6 +24,12 @@ module SolanumRb
           # `circular` and the Adwaita colour scheme all silently do nothing.
           # AdwApplication would have done it; a Gtk::Application does not.
           Adwaita.init
+
+          # Upstream's `glib::set_application_name` in main.rs: the name a
+          # desktop environment shows for the process — in a notification
+          # header, in the window list, and in the shell's "force quit".
+          # Without it GLib falls back to the executable's name.
+          GLib.application_name = application_name
 
           register_icons
           load_stylesheet
@@ -45,6 +50,11 @@ module SolanumRb
     end
 
     def run = app.run([])
+
+    # Upstream passes this literal, untranslated: it is the brand name. The
+    # devel build marks itself with `Config.name_suffix`, the way its desktop
+    # entry and its metainfo do.
+    def application_name = "Solanum#{Config.name_suffix}"
 
     # One window only: re-activating the app raises the existing one.
     def main_window = @main_window ||= Window.new(app)

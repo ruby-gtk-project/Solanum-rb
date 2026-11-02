@@ -217,6 +217,12 @@
             pkgs.appstream
             pkgs.adwaita-icon-theme
             pkgs.gsettings-desktop-schemas
+            # GTK4 has no offscreen backend: gtk_init fails outright when
+            # there is no display, which on a headless machine takes down the
+            # app and every test/drive_*.rb script with it. The shell carries
+            # a display it can start itself, so `xvfb-run -a ruby <script>`
+            # works with no display server present.
+            pkgs.xvfb-run
           ] ++ gtkStack;
 
           # Icons, GSettings schemas and the GTK portal all resolve through
@@ -228,9 +234,12 @@
             export XDG_DATA_DIRS="$PWD/build/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk4}/share/gsettings-schemas/${pkgs.gtk4.name}:${pkgs.adwaita-icon-theme}/share:$XDG_DATA_DIRS"
             unset BUNDLE_GEMFILE BUNDLE_FROZEN BUNDLE_PATH
             echo "solanum-rb devshell — ruby $(ruby -e 'print RUBY_VERSION')"
-            echo "  ./exe/solanum-rb   run the app"
-            echo "  rake               test, validate + lint"
-            echo "  SOLANUM_RB_PROFILE=development ./exe/solanum-rb   devel build"
+            echo "  xvfb-run -a ./exe/solanum-rb        run the app"
+            # A screen argument, not just a display: the breakpoint steps grow the
+            # window to 800sp square, which does not fit xvfb-run's 1280x1024 default.
+            echo "  xvfb-run -a -s '-screen 0 1600x1200x24' ruby test/drive_solanum.rb   drive it headlessly"
+            echo "  rake                                test, validate + lint"
+            echo "  SOLANUM_RB_PROFILE=development xvfb-run -a ./exe/solanum-rb   devel build"
           '';
         };
       });

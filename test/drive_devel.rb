@@ -29,6 +29,9 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
       app.app.application_id == 'org.gnome.Solanum.Rb.Devel'
     end
     d.check('the window is striped') { win.window.has_css_class?('devel') }
+    # The name a desktop environment shows carries the devel marker, the way
+    # the devel desktop entry and metainfo do.
+    d.check('the application name is marked') { GLib.application_name == 'Solanum ☢' }
     d.check('and carries the devel icon') do
       win.window.icon_name == 'org.gnome.Solanum.Rb.Devel'
     end

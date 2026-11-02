@@ -27,6 +27,8 @@ librsvg and the bundled gems from `gemset.nix`. Regenerate that file with
 
 - `exe/solanum-rb` runs the app. `SOLANUM_RB_PROFILE=development` gives the
   devel build — own app id and icon, striped header, commit-stamped version.
+  GTK 4.22 refuses to initialize with no display, so on a headless machine
+  prefix it with `xvfb-run -a`, which the dev shell carries.
 - `rake` runs the checks, the validation and rubocop.
   - `rake schema` compiles `data/org.gnome.Solanum.Rb.gschema.xml` into
     `build/`, which the dev shell puts on `XDG_DATA_DIRS`. Nothing that touches
@@ -40,10 +42,14 @@ librsvg and the bundled gems from `gemset.nix`. Regenerate that file with
   - `test/test_units.rb` needs no display: the countdown arithmetic, the PO
     catalogue, the build profile, the appdata reader, the generated data files
     and the stylesheet.
-  - `test/drive_solanum.rb` builds the real window headlessly, drives every
-    state and every dialog, and writes screenshots to `tmp/shots`.
-    `test/drive_devel.rb` does the same for the devel profile, which needs its
-    own process because the profile is read before the application id is built.
+  - `test/drive_solanum.rb` builds the real window, drives every state and
+    every dialog, and writes screenshots to `tmp/shots`. `test/drive_devel.rb`
+    does the same for the devel profile, which needs its own process because
+    the profile is read before the application id is built. Both need a
+    display:
+    `xvfb-run -a -s '-screen 0 1600x1200x24' ruby test/drive_solanum.rb`. The
+    screen has to be that big, or the breakpoint steps cannot grow the window
+    past 800sp square.
 - `nix build` produces the installable app, `nix build .#devel` the devel one.
 
 `PORTING.md` records how this port maps onto the Rust original and the
