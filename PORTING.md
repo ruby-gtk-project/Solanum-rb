@@ -8,7 +8,7 @@ stylesheet or the shortcuts dialog.
 
 | Upstream | Here |
 |---|---|
-| `src/main.rs` | `bin/solanum-rb` |
+| `src/main.rs` | `exe/solanum-rb` |
 | `src/app.rs` | `lib/solanum_rb/application.rb` |
 | `src/window.rs` + `data/ui/window.blp` | `lib/solanum_rb/window.rb` |
 | `src/timer.rs` | `lib/solanum_rb/timer.rb` |

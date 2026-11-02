@@ -11,7 +11,7 @@ component is accounted for below.
 
 | # | Upstream file(s) | Port file | Kind | Exists |
 |---|---|---|---|---|
-| 1 | `src/main.rs` | `bin/solanum-rb` + `lib/solanum_rb.rb` | entry point | yes |
+| 1 | `src/main.rs` | `exe/solanum-rb` + `lib/solanum_rb.rb` | entry point | yes |
 | 2 | `src/app.rs` | `lib/solanum_rb/application.rb` | application | yes |
 | 3 | `src/app.rs` (`show_about`) + `data/org.gnome.Solanum.metainfo.xml.in.in` | `lib/solanum_rb/about_dialog.rb` | dialog | yes |
 | 4 | `data/org.gnome.Solanum.metainfo.xml.in.in` (read at runtime by `AboutWindow::from_appdata`) | `lib/solanum_rb/appdata.rb` | support | yes |
@@ -146,14 +146,16 @@ instant.
 
 ## Blockers
 
-1. **Stale scaffold still in `lib/`.** `lib/solanum.rb`,
-   `lib/solanum/application.rb` and `lib/solanum/rb/version.rb` are the
-   gem-skeleton leftovers: a second `Solanum::Application` with an
-   `Adw.StatusPage` reading "The Ruby port has not been written yet", a
-   `Gtk::Application` under the id `org.rubygtkproject.Solanum`, and a
-   `Solanum::Rb::VERSION`. They correspond to no upstream file, duplicate the
-   real application under a different module, and should be deleted or folded
-   into `lib/solanum_rb/`.
+1. **The nix bundle and the kettle-jem Gemfile have diverged.** `flake.nix`
+   builds its `bundlerEnv` from `gemdir = ./.`, and the root `Gemfile` now
+   opens with `gemspec` plus a row of `eval_gemfile` lines. `bundlerEnv`
+   copies only `Gemfile` and `Gemfile.lock` into the store, so every wrapper
+   that runs `bundler/setup` — `rake` above all — dies with "There are no
+   gemspecs at /nix/store/...-gemfile-and-lockfile". `exe/solanum-rb` is
+   plain `ruby` and is unaffected, so the app and the drive scripts run; only
+   the `rake` entry points are out. `nix/Gemfile` exists for exactly this
+   reason but lists neither `gstreamer` (the sounds) nor `rubocop`, and
+   re-resolving it needs the network. Packaging work, not porting work.
 2. **No specs.** `spec/` holds only `README.md` and `spec_helper.rb`; every
    component above is untested. Out of scope for this step — it belongs to
    the test-parity pass.

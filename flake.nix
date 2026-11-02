@@ -150,7 +150,7 @@
               mkdir -p $out/share/solanum-rb
               cp -r lib data po $out/share/solanum-rb/
               # bin/ has to sit next to lib/ for the launcher's require_relative.
-              install -Dm755 bin/solanum-rb $out/share/solanum-rb/bin/solanum-rb
+              install -Dm755 exe/solanum-rb $out/share/solanum-rb/bin/solanum-rb
 
               # The generated desktop entry and metainfo. The app reads the
               # metainfo back at runtime to build its about dialog, which is
@@ -228,9 +228,9 @@
             export XDG_DATA_DIRS="$PWD/build/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk4}/share/gsettings-schemas/${pkgs.gtk4.name}:${pkgs.adwaita-icon-theme}/share:$XDG_DATA_DIRS"
             unset BUNDLE_GEMFILE BUNDLE_FROZEN BUNDLE_PATH
             echo "solanum-rb devshell — ruby $(ruby -e 'print RUBY_VERSION')"
-            echo "  ./bin/solanum-rb   run the app"
+            echo "  ./exe/solanum-rb   run the app"
             echo "  rake               test, validate + lint"
-            echo "  SOLANUM_RB_PROFILE=development ./bin/solanum-rb   devel build"
+            echo "  SOLANUM_RB_PROFILE=development ./exe/solanum-rb   devel build"
           '';
         };
       });

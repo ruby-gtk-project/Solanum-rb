@@ -25,7 +25,7 @@ librsvg and the bundled gems from `gemset.nix`. Regenerate that file with
 `bundix -l` whenever `Gemfile.lock` moves; nix only sees git-tracked files, so
 `git add` it first.
 
-- `bin/solanum-rb` runs the app. `SOLANUM_RB_PROFILE=development` gives the
+- `exe/solanum-rb` runs the app. `SOLANUM_RB_PROFILE=development` gives the
   devel build — own app id and icon, striped header, commit-stamped version.
 - `rake` runs the checks, the validation and rubocop.
   - `rake schema` compiles `data/org.gnome.Solanum.Rb.gschema.xml` into

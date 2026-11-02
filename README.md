@@ -16,12 +16,12 @@ languages.
 ```sh
 nix develop            # or: direnv allow
 rake schema desktop    # compile the schema, generate the desktop entry
-bin/solanum-rb
+exe/solanum-rb
 ```
 
 `nix build` produces the installable app; `nix run` starts it.
 
-`SOLANUM_RB_PROFILE=development bin/solanum-rb`, or `nix build .#devel`, gives
+`SOLANUM_RB_PROFILE=development exe/solanum-rb`, or `nix build .#devel`, gives
 the development build — its own application id and icon, a striped header bar
 and a commit-stamped version, so it installs alongside a release build. This is
 upstream's `-Dprofile=development`.

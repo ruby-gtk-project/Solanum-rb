@@ -222,7 +222,7 @@ end
 
 desc 'Run the application'
 task run: %i[schema desktop] do
-  sh 'bin/solanum-rb'
+  sh 'exe/solanum-rb'
 end
 
 desc 'Lint'
