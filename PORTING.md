@@ -89,10 +89,10 @@ release notes for this version. Every one falls back to the value upstream
 would have shown anyway, so a checkout where `rake desktop` has not run gets a
 plainer dialog rather than an empty one.
 
-**GStreamer through `playbin`, not `GstPlay`.** Upstream uses `gstreamer_play`;
-the Ruby `gstreamer` gem exposes the pipeline one layer down. `Gtk::MediaFile`
-would have been simpler still, but nixpkgs' gtk4 is built without any
-GtkMediaFile backend, so it resolves to `GtkNothingMedia` and plays silence.
+**GStreamer through the `gstreamer_play` gem, same as upstream.** It binds
+`GstPlay` straight off gst-plugins-bad's typelib. `Gtk::MediaFile` would have
+been simpler still, but nixpkgs' gtk4 is built without any GtkMediaFile
+backend, so it resolves to `GtkNothingMedia` and plays silence.
 
 ## Defects found while porting
 
@@ -158,9 +158,10 @@ freshly built one snapshots to nothing, which made screenshots fail at random.
 `test/gtk_driver.rb` keeps one paintable per widget for the session. This is
 the only change to the file copied from the `ruby-gtk-testing` skill.
 
-**Building the GStreamer pipeline stalls the UI.** Creating `playbin` scans the
-plugin registry: ~240 ms warm, seconds cold. Left lazy, that lands on the first
-press of Start. `Window#build` touches `sound` so it is paid at startup.
+**Building the GStreamer pipeline stalls the UI.** Creating `GstPlay::Play`
+builds a `playbin3` and scans the plugin registry: ~240 ms warm, seconds cold.
+Left lazy, that lands on the first press of Start. `Window#build` touches
+`sound` so it is paid at startup.
 
 **`Gio::Settings.new` aborts the process on a missing schema**, which in a dev
 checkout means a SIGTRAP and no explanation. `Settings` looks the schema up

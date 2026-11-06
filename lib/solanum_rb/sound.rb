@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-require 'gst'
+require 'gstreamer_play'
 
 require_relative 'paths'
 
 module SolanumRb
-  # The beep on start and the chime on lap change. Upstream uses GstPlay;
-  # `playbin` is the same pipeline one layer down, and is what the `gstreamer`
-  # gem exposes.
+  # The beep on start and the chime on lap change, through GstPlay — the same
+  # library upstream uses, via the `gstreamer_play` gem.
   #
   # Audio is the one thing a headless test cannot confirm, so a missing sink
   # or a missing decoder must not take the timer down with it: playback
@@ -16,34 +15,33 @@ module SolanumRb
     BEEP = 'beep.ogg'
     CHIME = 'chime.ogg'
 
-    attr_reader :playbin
+    attr_reader :player
 
     def initialize
-      @playbin = build_playbin
+      @player = build_play
     end
 
     def play(name)
-      case playbin
+      case player
       when nil then nil
       else restart(name)
       end
     end
 
-    # `playbin` only re-reads its `uri` from the READY state, so a second play
+    # GstPlay only re-reads its `uri` from a stopped state, so a second play
     # of the same file is silent without the stop first.
     def restart(name)
-      playbin.stop
-      playbin.uri = "file://#{Paths.sound(name)}"
-      playbin.play
+      player.stop
+      player.uri = "file://#{Paths.sound(name)}"
+      player.play
     rescue StandardError => e
       warn("solanum-rb: could not play #{name}: #{e.message}")
     end
 
     # Built once, so a broken GStreamer is diagnosed at startup rather than on
     # every lap.
-    def build_playbin
-      Gst.init
-      Gst::ElementFactory.make('playbin', 'solanum-sound')
+    def build_play
+      GstPlay::Play.new
     rescue StandardError => e
       warn("solanum-rb: no audio, GStreamer did not start: #{e.message}")
       nil

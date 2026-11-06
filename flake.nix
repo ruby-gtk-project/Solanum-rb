@@ -12,14 +12,16 @@
         pkgs = import nixpkgs { inherit system; };
         ruby = pkgs.ruby_3_3;
 
-        # GStreamer plays the chime and the beep. Upstream uses GstPlay; this
-        # port uses the same library through the `gstreamer` gem, because
-        # nixpkgs' gtk4 is built without any GtkMediaFile backend, so
-        # Gtk::MediaFile would resolve to GtkNothingMedia and play silence.
+        # GStreamer plays the chime and the beep, through GstPlay (the
+        # `gstreamer_play` gem). nixpkgs' gtk4 is built without any
+        # GtkMediaFile backend, so Gtk::MediaFile would resolve to
+        # GtkNothingMedia and play silence. GstPlay itself, and GstBadAudio,
+        # ship in gst-plugins-bad's typelib.
         gstStack = with pkgs.gst_all_1; [
           gstreamer
           gst-plugins-base
           gst-plugins-good
+          gst-plugins-bad
         ];
 
         # Shared libraries every ruby-gnome extension links against.
@@ -101,7 +103,8 @@
           gtk4 = rubyGnomeGem;
           graphene1 = rubyGnomeGem;
           adwaita = rubyGnomeGem;
-          gstreamer = rubyGnomeGem;
+          # gstreamer_play is pure Ruby — no extension of its own, so it
+          # needs no entry here. It only needs the typelibs in gstStack.
         };
 
         # `makeSearchPath` would take each package's *first* output, and glib's
@@ -116,7 +119,7 @@
         gems = pkgs.bundlerEnv {
           name = "solanum-rb-gems";
           inherit ruby gemConfig;
-          gemdir = ./.;
+          gemdir = ./nix;
         };
 
         # Upstream's -Dprofile=default|development. The devel build gets its

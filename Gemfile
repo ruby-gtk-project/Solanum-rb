@@ -62,9 +62,10 @@ gem "irb", "~> 1.17" # ruby >= 2.7
 # libadwaita bindings; pulls in gtk4, glib2, cairo and friends.
 gem "adwaita", "~> 4.3"
 gem "gem_kit"
-# The chime and the beep. Upstream uses GstPlay; nixpkgs' gtk4 ships no
-# GtkMediaFile backend, so Gtk::MediaFile would play silence.
-gem "gstreamer", "~> 4.3"
+# The chime and the beep, through GstPlay — the same library upstream uses.
+# nixpkgs' gtk4 ships no GtkMediaFile backend, so Gtk::MediaFile would play
+# silence.
+gem "gstreamer_play", "~> 1.1"
 
 group :development, :test do
   gem "rake", "~> 13.0"
