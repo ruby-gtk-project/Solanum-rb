@@ -1,0 +1,6 @@
+data/org.gnome.Solanum.Rb.desktop.in
+data/org.gnome.Solanum.Rb.metainfo.xml.in
+lib/solanum_rb/about_dialog.rb
+lib/solanum_rb/preferences_dialog.rb
+lib/solanum_rb/shortcuts_dialog.rb
+lib/solanum_rb/window.rb
