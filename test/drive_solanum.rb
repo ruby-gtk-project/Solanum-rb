@@ -65,11 +65,22 @@ def record_fullscreen_requests(window)
   end
 end
 
+# Audio is the one thing a headless run cannot hear, but the wiring that
+# decides *which* file gets asked for on the start beep and the lap chime is
+# still something a driven run can confirm, by logging the name `Sound#play`
+# was called with instead of asking GStreamer to actually produce sound.
+def record_sound_requests(sound)
+  [].tap do |requests|
+    sound.define_singleton_method(:play) { |name| requests << name }
+  end
+end
+
 app = SolanumRb::Application.new
 win = nil
 settings = nil
 small_timer_height = nil
 fullscreen_requests = nil
+sound_requests = nil
 
 GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   d.window { app.main_window.window }
@@ -105,6 +116,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
     # Baseline for the breakpoint check further down.
     small_timer_height = win.timer_label.measure(:vertical, -1)[1]
     d.check('the countdown has a height to compare against') { small_timer_height.positive? }
+    sound_requests = record_sound_requests(win.sound)
     d.shot('01-stopped')
   end
 
@@ -132,6 +144,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
     d.check('reset is refused while running') { !win.window.lookup_action('reset').enabled? }
     settle_blocking { win.timer_label.label != '25∶00' }
     d.check('the countdown has moved off 25:00') { win.timer_label.label != '25∶00' }
+    d.check('starting the timer asked to play the beep') { sound_requests == [SolanumRb::Sound::BEEP] }
     d.shot('02-running')
   end
 
@@ -225,6 +238,7 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
   end
 
   d.step('a lap that runs out advances by itself') do
+    sound_requests.clear
     win.window.activate_action('toggle-timer', nil)
     # Drain the lap without waiting 25 minutes: the timer reads a monotonic
     # clock, so the only way to cut it short is to shorten the lap itself.
@@ -236,6 +250,9 @@ GtkDriver.drive(app, shots: 'tmp/shots') do |d, _|
     d.check('the lap label reads Short Break') { win.lap_label.label == 'Short Break' }
     d.check('the timer paused itself') { !win.timer.running? }
     d.check('the countdown blinks again') { win.timer_label.has_css_class?('blinking') }
+    d.check('the lap change asked to play the chime') do
+      sound_requests == [SolanumRb::Sound::BEEP, SolanumRb::Sound::CHIME]
+    end
     d.shot('07-lap-elapsed')
   end
 
