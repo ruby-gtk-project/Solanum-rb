@@ -3,8 +3,28 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `f8f8046` |
+| Port | `ruby` @ `63fce02` |
 | Upstream messages | 44 (distinct `(msgctxt, msgid)` keys; see methodology note below) |
+
+**Re-checked this round against `63fce02`** (one commit after this ledger
+was last written, `f8f8046`). The intervening commit added `I18n#k_` and
+widened `I18n#f_` to `gsub` every `{}` instead of `sub`-ing one — it calls
+no new msgid and reworded no existing one (`f_('Lap {}', n)` is still the
+only call site, unchanged), so the 44-message catalogue below is unchanged.
+One thing it is relevant to, flagged properly in `TEST_PARITY.md` rather
+than here per that skill's own rule about where a binding/capability gap
+belongs: `k_`/`f_` still only cover *positional and named placeholder*
+interpolation, never a *plural, no-catalogue* dispatch (upstream's
+`ni18n`/`pni18n` family) — `.rb`'s `I18n` module has no method that picks
+between two different English literals by count. That is a test-parity and
+a component-behaviour gap, not a translation-key gap: Solanum's one plural
+message (`"Lap {}"`) has an identical singular and plural upstream msgid,
+so no key is missing and no msgid is wrong. If that ever stops being true
+for a future string, the catalogue axis this ledger checks would still
+read "ported" while the literal shown to an untranslated user would be
+wrong — which is exactly why `component-parity` keeps a fourth axis
+(behaviour) separate from this ledger's text axis, and why this note points
+there instead of re-litigating it here.
 | Port messages | 44 |
 | Gaps | 0 |
 | Extra | 0 |

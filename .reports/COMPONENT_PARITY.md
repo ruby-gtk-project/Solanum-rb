@@ -3,9 +3,22 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `f8f8046` |
+| Port | `ruby` @ `63fce02` |
 | Units checked | 5 / 5 (window, preferences, shortcuts, about, app) |
 | Units with parity | 5 / 5 |
+
+**Re-verified this round against `63fce02`** (the commit after the one this
+file was last written against, `f8f8046`). That commit only touched
+`lib/solanum_rb/i18n.rb` (`f_`/`k_`, see `TEST_PARITY.md`) and
+`test/test_units.rb` — no widget, CSS, signal or action in any of the five
+units below. Re-read `window.rb`, `preferences_dialog.rb`,
+`shortcuts_dialog.rb`, `about_dialog.rb` and `application.rb` against the
+same five upstream units; nothing in this ledger's tables changed. I did
+**not** re-run `component-scan.sh` this round — "Round 2" below already ran
+it against `63fce02`'s parents and nothing it compares (widgets/CSS/
+signals/actions) was touched by the intervening commit, so re-running it
+would reproduce the same TSVs. Flagging that I relied on reading the diff
+rather than re-running the scan, rather than silently implying I did.
 
 This is a hand comparison on all four axes (count, style, behaviour, text),
 not a `component-scan.sh`-driven one — see `component-identification.md` for

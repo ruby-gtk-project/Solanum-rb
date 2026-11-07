@@ -3,7 +3,12 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `f8f8046` |
+| Port | `ruby` @ `63fce02` |
+
+Re-checked this round: `63fce02` added `I18n#k_` and widened `I18n#f_`, plus
+tests. Neither is a widget, a `.blp`/`.ui` file, a CSS class, a signal or an
+action, so it does not change anything in this inventory. No new file maps
+to anything; the file map below is unchanged.
 
 ## What already exists
 
