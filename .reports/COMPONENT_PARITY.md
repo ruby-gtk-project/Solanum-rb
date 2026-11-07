@@ -3,22 +3,21 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `63fce02` |
+| Port | `ruby` @ `6bfc160` |
 | Units checked | 5 / 5 (window, preferences, shortcuts, about, app) |
-| Units with parity | 5 / 5 |
+| Units with parity | 4 / 5 — **main window has one confirmed behaviour gap** (see below) |
 
-**Re-verified this round against `63fce02`** (the commit after the one this
-file was last written against, `f8f8046`). That commit only touched
-`lib/solanum_rb/i18n.rb` (`f_`/`k_`, see `TEST_PARITY.md`) and
-`test/test_units.rb` — no widget, CSS, signal or action in any of the five
-units below. Re-read `window.rb`, `preferences_dialog.rb`,
-`shortcuts_dialog.rb`, `about_dialog.rb` and `application.rb` against the
-same five upstream units; nothing in this ledger's tables changed. I did
-**not** re-run `component-scan.sh` this round — "Round 2" below already ran
-it against `63fce02`'s parents and nothing it compares (widgets/CSS/
-signals/actions) was touched by the intervening commit, so re-running it
-would reproduce the same TSVs. Flagging that I relied on reading the diff
-rather than re-running the scan, rather than silently implying I did.
+**Re-verified this round against `6bfc160`**, three commits past the last
+sha this file was pinned to (`63fce02`). Read `git show --stat` for each
+intervening commit (`bafffba` — prose-only rewrite of
+`component-inventory.md`; `3164e13` — adds `po/POTFILES.in`, no `lib/`
+change; `6bfc160` — adds assertions to `test/drive_solanum.rb`, no `lib/`
+change) and confirmed none touches a widget, CSS class, signal or action in
+any of the five units below, so the tables carried over from the previous
+pass are still accurate as *tables*. What is new this round, found by
+re-deriving the text-axis check rather than trusting the previous pass's
+"parity" verdict on the lap label: **the previous pass's row for the lap
+label text was wrong.** See "Confirmed regression" below.
 
 This is a hand comparison on all four axes (count, style, behaviour, text),
 not a `component-scan.sh`-driven one — see `component-identification.md` for
@@ -38,7 +37,7 @@ that is and is not.
 | `Adw.ToolbarView` | 1 | 1 | — | — | — | parity |
 | `Adw.HeaderBar` | 1 | 1 | `show-title: false` | — | — | parity |
 | `Gtk.Box` (main) | 1 | 1 | `.main_box`→`.main-box` (see below) | — | — | parity |
-| `Gtk.Label` lap | 1 | 1 | `heading`,`dim-label` | — | ✓ `_("Lap {}")`/`_("Long Break")`/`_("Short Break")` | parity |
+| `Gtk.Label` lap | 1 | 1 | `heading`,`dim-label` | — | `_("Long Break")`/`_("Short Break")` parity; `"Lap {}"` text is **not** parity — see below | **gap** (text axis only) |
 | `Gtk.Label` timer | 1 | 1 | `timer-label`,`accent`,`blinking` | — | — | parity |
 | `Gtk.CenterBox` | 1 | 1 | — | — | — | parity |
 | `Gtk.Button` timer_button | 1 | 1 | `circular`,`large`,(+`suggested-action` when stopped) | `win.toggle-timer` | ✓ `_("Toggle Timer")` | parity |
@@ -48,6 +47,53 @@ that is and is not.
 | `Adw.Breakpoint` | 1 | 1 | — | `min-width:800sp and min-height:800sp` | — | parity |
 | window actions | 4 (`toggle-timer`,`reset`,`skip`,`show-help-overlay`) | 4 | — | — | — | parity |
 | notification (`Gio::Notification`) | 1 built per lap change | 1 | — | buttons: `app.toggle-timer`, `app.skip` | ✓ 7 strings (`Back to Work`/`Ready to keep working?`/`Start Working`/`Break Time`/`Stretch your legs, and drink some water.`/`Start Break`/`Skip`), byte-identical | parity |
+
+## Confirmed regression (not a hypothetical): the lap label renders wrong in four shipped locales
+
+`src/window.rs` sets the lap label with `ni18n_f("Lap {}", "Lap {}", count,
+&[count.to_s])` — upstream's plural-dispatch wrapper, called with identical
+singular/plural *msgid*s but passing the count through so the translation
+layer can still pick a different *msgstr* per language's own plural rule.
+`window.rb` (line 240) instead calls `f_('Lap {}', @pomodoro_count)` —
+positional interpolation only, no plural dispatch at all. `I18n#_`, which
+`f_` calls internally, always returns `catalogue.fetch(text, text)`, i.e.
+always `msgstr[0]`.
+
+Previous rounds' reports (`TRANSLATION_PARITY.md`, `TEST_PARITY.md`) treated
+this as a *theoretical* gap — "if a future string's singular/plural English
+differ, this would be wrong" — because English's `msgid`/`msgid_plural` for
+this one string are byte-identical. That framing is itself the false
+reassurance this round's `accountability-ensurance` pass is about: the
+*English* forms being identical says nothing about the *translated* forms,
+and a direct read of the shipped `.po` files shows four locales where they
+differ:
+
+```sh
+$ for f in po/*.po; do python3 - "$f" <<'PY'
+import sys,re
+text=open(sys.argv[1],encoding='utf-8').read()
+for b in text.split("\n\n"):
+    if 'msgid "Lap {}"' in b and 'msgid_plural' in b:
+        ms=re.findall(r'msgstr\[\d+\]\s+"((?:[^"\\]|\\.)*)"', b)
+        if len(set(ms))>1: print(sys.argv[1], ms)
+PY
+done
+po/ca.po    ['Volta {}', 'Voltes {}']
+po/fur.po   ['Zîr {}', 'Zîrs {}']
+po/oc.po    ['Torn {}', 'Torns {}']
+po/pt_BR.po ['Série {}', 'Séries {}']
+```
+
+A Catalan, Friulian, Occitan or Brazilian-Portuguese user on this port sees
+"Volta 2" / "Zîr 3" / "Torn 5" / "Série 2" on every single non-first lap
+— the grammatically singular form — forever, because `I18n` has no code
+path that can ever select `msgstr[1]`. Upstream's user, on the same
+locale, sees "Voltes 2" / "Zîrs 3" / "Torns 5" / "Séries 2" (plural form)
+correctly from lap 2 onward. This is reproducible today, in 4 of the 47
+shipped languages, with no future string required to trigger it — it is a
+present-tense component-parity gap on the main window's text axis, not a
+latent risk. Downgrading the window unit's verdict above from full parity
+to "gap (text axis)" for this reason.
 
 Stylesheet: `.main_box` (upstream, never matches the window's applied class,
 a pre-existing upstream bug) vs `.main-box` (port, matches) — a documented,
@@ -60,8 +106,11 @@ Driven: `test/drive_solanum.rb` exercises the full lap cycle (pomodoro →
 short break → pomodoro → … → long break), pause/resume, reset, preference
 changes taking effect on the next lap, fullscreen-on-break with and without
 the preference, the breakpoint growing/shrinking, and all three
-dialogs opening and closing — 93/93 passing, confirmed by re-running it
-(see `test-parity.md`).
+dialogs opening and closing, and (new this round) the beep/chime sound
+calls — 95/95 passing, confirmed by re-running it this round (see
+`TEST_PARITY.md`). None of these 95 checks assert the lap-label *text*
+beyond English, so the drive suite does not and cannot catch the plural-
+rendering gap above — it only ever runs in the default (English) locale.
 
 ## Unit: preferences dialog — `src/preferences_window.rs` + `data/ui/preferences-window.blp` → `lib/solanum_rb/preferences_dialog.rb`
 
@@ -130,16 +179,18 @@ rather than an empty field.
 | `<Primary>q` → `app.quit` | ✓ | ✓ | parity |
 | `<Primary>question` → `win.show-help-overlay` | implicit (GtkApplicationWindow's built-in help-overlay binding) | explicit `set_accels_for_action` | parity (correspondence: the port has no `set_help_overlay` hook to bind it for, so it is wired by hand — stated in-code) |
 
-## Nothing found missing
+## Summary: one confirmed gap, everything else located and justified
 
 Across these five units — every window, every dialog, every menu item,
-every accelerator, every window/app action — I found no widget, CSS class,
-signal, action, or user-visible string on upstream's side without a located
-counterpart in the port. Every difference I found (`main_box`/`main-box`,
-`var()`/`@accent_color`, direct method call vs `activate_action`, explicit
-vs implicit accelerator, `AdwPreferencesDialog`/`AdwShortcutsDialog`
-substitutions) is named, located, and justified in `PORTING.md` rather than
-asserted and left unlocated.
+every accelerator, every window/app action — every widget, CSS class,
+signal and action on upstream's side has a located counterpart in the
+port. One user-visible *string behaviour* does not: the lap label's
+plural dispatch (above). Every other difference found (`main_box`/
+`main-box`, `var()`/`@accent_color`, direct method call vs
+`activate_action`, explicit vs implicit accelerator,
+`AdwPreferencesDialog`/`AdwShortcutsDialog` substitutions) is named,
+located, and justified in `PORTING.md` rather than asserted and left
+unlocated.
 
 The caveat is the one `component-identification.md` already states: this is
 five units read by hand, not a `component-scan.sh` diff over the whole

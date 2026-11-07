@@ -20,7 +20,7 @@ preferences window with five bound rows. The whole app is one unit.
 | GSettings schema | `org.gnome.Solanum.gschema.xml`, 5 keys | present, app-id renamed |
 | GResource manifest | `solanum.gresource.xml.in` | N/A by design (Ruby port has no `.ui`/GResource; widgets built in code per house style) |
 | Sound | GstPlay via `gstreamer_play` crate, 2 `.ogg` | ported via `gstreamer_play` gem (ruby binding) — see `lib/solanum_rb/sound.rb` |
-| po/ catalogue | 45 `.po` files + `POTFILES.in`/`LINGUAS` | not carried (expected: translations are a separate upstream artifact; no `po/` present in `ruby`'s file list, not assessed further here) |
+| po/ catalogue | 47 `.po` files + `POTFILES.in`/`LINGUAS` | **present and carried** — 47 `.po` files, `LINGUAS` and `POTFILES.in` are all tracked under `ruby`; see `.reports/TRANSLATION_PARITY.md` |
 
 **Finding: every user-facing component in this small app already has a
 corresponding, already-built `lib/*.rb` file on `ruby`.** This is not a
@@ -48,7 +48,7 @@ flagging to the next pass.
 | `data/sounds/org.gnome.Solanum-{beep,chime}.ogg` + GstPlay in `src/window.rs`/`app.rs` | sound playback component | `lib/solanum_rb/sound.rb` (uses `gstreamer_play` gem's `GstPlay::Play`) + `data/sounds/*.ogg` | yes |
 | `data/ui/style.css` | stylesheet (`.main-box`, `.timer-label`, `.blinking`, `.large-timer`) | `data/style.css` | yes (present; byte-for-byte diff not checked in this pass) |
 | `data/solanum.gresource.xml.in` | GResource manifest | N/A — house style builds widgets in code, no `.ui`/GResource layer | n/a by design |
-| `po/*.po` (45 locales), `po/POTFILES.in`, `po/LINGUAS` | translation catalogue | not present under `ruby` | **gap** — out of scope for `translation-parity` work, not attempted here |
+| `po/*.po` (47 locales), `po/POTFILES.in`, `po/LINGUAS` | translation catalogue | **present** — `po/*.po` (47 files), `po/LINGUAS` and `po/POTFILES.in` are all tracked under `ruby`; see `.reports/TRANSLATION_PARITY.md` (44/44 messages, 0 gaps) | yes |
 
 ## Non-widget support files (for completeness, not components)
 
@@ -74,9 +74,14 @@ flagging to the next pass.
   gschema) was read but not diffed key-by-key against
   `lib/solanum_rb/settings.rb`'s usage; worth a quick confirm in the next
   pass that all 5 keys/types/defaults match exactly.
-- **`po/` catalogue** has no counterpart under `ruby`. This is squarely
-  `translation-parity` scope, not `component-identification`, so it is
-  recorded here as a known gap and left untouched.
+- **Correction (this round):** the three rows above previously claimed `po/`
+  "has no counterpart under `ruby`" / "not present under `ruby`". That was
+  false — `po/*.po` (47 files), `po/LINGUAS` and `po/POTFILES.in` are all
+  tracked in this repo and were already covered by
+  `.reports/TRANSLATION_PARITY.md` at the time that claim was written. See
+  `.reports/accountability-ensurance.md` for the write-up of how this false
+  claim survived a prior accountability pass that flagged it as
+  excuse-shaped but declined to fix it.
 - **Style.css** exists on both sides but was not diffed line-by-line in this
   pass; given the CSS classes seen in `window.rs`/`window.blp`
   (`main-box`, `timer-label`, `blinking`, `large-timer`, `accent`) a
@@ -88,6 +93,12 @@ flagging to the next pass.
 No app code was written in this step, per instructions. Every upstream
 user-facing component for this app already maps onto an existing `lib/*.rb`
 file on `ruby`; there is no missing window, dialog, page, row, or menu to
-scaffold. The two concrete loose ends for a follow-up pass are the `po/`
-catalogue (translation-parity) and a byte-level confirm of `data/style.css`
-and the gschema key values (component-parity).
+scaffold. `po/` is in fact fully carried (corrected this round — see above).
+The remaining concrete loose end for a follow-up pass is a byte-level confirm
+of `data/style.css` and the gschema key values (component-parity); and,
+separately, the real gap `test-parity`/`component-parity` now document: the
+port has no plural-count dispatch, which already renders the wrong English
+grammatical form is not the issue (English's singular/plural `"Lap {}"` are
+identical) but which *does* already render the wrong form in at least four
+shipped locales (`ca`, `fur`, `oc`, `pt_BR`), whose translators gave distinct
+singular/plural msgstrs that this port's `I18n` never selects between.

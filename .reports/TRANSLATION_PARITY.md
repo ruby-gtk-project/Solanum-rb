@@ -3,28 +3,38 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `63fce02` |
+| Port | `ruby` @ `6bfc160` |
 | Upstream messages | 44 (distinct `(msgctxt, msgid)` keys; see methodology note below) |
 
-**Re-checked this round against `63fce02`** (one commit after this ledger
-was last written, `f8f8046`). The intervening commit added `I18n#k_` and
-widened `I18n#f_` to `gsub` every `{}` instead of `sub`-ing one — it calls
-no new msgid and reworded no existing one (`f_('Lap {}', n)` is still the
-only call site, unchanged), so the 44-message catalogue below is unchanged.
-One thing it is relevant to, flagged properly in `TEST_PARITY.md` rather
-than here per that skill's own rule about where a binding/capability gap
-belongs: `k_`/`f_` still only cover *positional and named placeholder*
-interpolation, never a *plural, no-catalogue* dispatch (upstream's
-`ni18n`/`pni18n` family) — `.rb`'s `I18n` module has no method that picks
-between two different English literals by count. That is a test-parity and
-a component-behaviour gap, not a translation-key gap: Solanum's one plural
-message (`"Lap {}"`) has an identical singular and plural upstream msgid,
-so no key is missing and no msgid is wrong. If that ever stops being true
-for a future string, the catalogue axis this ledger checks would still
-read "ported" while the literal shown to an untranslated user would be
-wrong — which is exactly why `component-parity` keeps a fourth axis
-(behaviour) separate from this ledger's text axis, and why this note points
-there instead of re-litigating it here.
+**Re-checked this round against `6bfc160`**, four commits past the sha this
+ledger was last pinned to (`63fce02`). Of those, `3164e13` ("Add
+po/POTFILES.in, completing the translation catalogue") is squarely this
+ledger's own scope and is covered below. The other three (`bafffba`,
+`9808fbe`, `6bfc160`) touch no msgid, no `.po` file and no `I18n` call site.
+
+**What this ledger checks, and what it does not.** The *key axis* — does
+every upstream `(msgctxt, msgid)` exist in `po/*.po`, and only those keys —
+is 44/44, 0 gaps, 0 extra, genuinely. What this ledger does **not** check,
+and what previous rounds' notes here understated by reasoning from the
+English source instead of the shipped translations: `I18n` has no plural-
+*dispatch* method (`ni18n`/`pni18n` and their `_f`/`_k` forms are entirely
+absent from `lib/solanum_rb/i18n.rb`), so it can never select `msgstr[1]`
+for a plural entry — it always reads `msgstr[0]`. Previous rounds argued
+this was safe because Solanum's one plural *English* msgid/msgid_plural
+pair (`"Lap {}"`) is identical, and reasoned from there to "not yet
+produced a visible bug." That reasoning does not hold: translators choose
+plural wording per their own language's grammar independent of the
+English source, and four shipped `.po` files do give genuinely different
+singular/plural `msgstr`s for this key — `ca`, `fur`, `oc`, `pt_BR` (see
+`.reports/COMPONENT_PARITY.md` for the exact strings and
+`.reports/TEST_PARITY.md` for the test-coverage angle). Those four
+languages render the wrong grammatical form on every lap past the first.
+This is **not** a key-axis gap (the `msgid` exists correctly, in the right
+language, with the right context — translation-parity's own job is done),
+so the 44/44 count below is not wrong; it is a `component-parity`/
+`test-parity` behaviour gap that this ledger's own methodology cannot see,
+and this note is corrected to say so plainly rather than reassure that it
+has not happened.
 | Port messages | 44 |
 | Gaps | 0 |
 | Extra | 0 |
@@ -141,12 +151,25 @@ diff -rq up/po po                                                               
 
 All 47 `.po` files upstream ships are present in the port, byte-identical,
 and `po/LINGUAS` matches the file listing on both sides exactly (47 == 47,
-no stray entries either direction). The port ships no `.pot`/`POTFILES.in`
-because there is no `xgettext` step — `I18n` reads the `.po` files directly
-at runtime (documented in `PORTING.md`) — so there is nothing to diff there,
-and nothing missing either: every shipped `.po` file still has every msgid
-the port looks up, because the lookup key set (44 messages) is the same set
-those files were translated against.
+no stray entries either direction).
+
+**Correction (this round):** the previous version of this note said the
+port "ships no `.pot`/`POTFILES.in`... so there is nothing to diff there".
+That is no longer true — `po/POTFILES.in` was added in `3164e13`, after
+this ledger was last written, listing the six Ruby sources
+(`about_dialog.rb`, `preferences_dialog.rb`, `shortcuts_dialog.rb`,
+`window.rb`) and two generated-template inputs
+(`org.gnome.Solanum.Rb.desktop.in`, `org.gnome.Solanum.Rb.metainfo.xml.in`)
+that carry translatable strings, mirroring upstream's eight-entry
+`po/POTFILES.in`. Confirmed this round: every file it lists is a real
+source of a translated string (`application.rb`, `timer.rb` and
+`config.rb` — the three `.rb` files it omits — have no `_`/`p_`/`f_`/`k_`
+call anywhere), and nothing in `rake`/`test/` reads `POTFILES.in` (there is
+still no `xgettext` step; `I18n` reads `po/*.po` directly, as before). It
+is documentation that now matches upstream's shape rather than a load-
+bearing file, and was untested before and after — not a gap, since nothing
+depends on it, but noted for completeness since this report is in the
+business of saying what is and is not exercised.
 
 ## Stylesheet-side classes (the other half of the text/style boundary)
 

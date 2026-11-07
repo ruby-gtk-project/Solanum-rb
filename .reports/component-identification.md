@@ -3,23 +3,14 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `63fce02` |
+| Port | `ruby` @ `6bfc160` |
 
-Re-checked this round: `63fce02` added `I18n#k_` and widened `I18n#f_`, plus
-tests. Neither is a widget, a `.blp`/`.ui` file, a CSS class, a signal or an
-action, so it does not change anything in this inventory. No new file maps
-to anything; the file map below is unchanged.
-
-## What already exists
-
-`.reports/component-inventory.md` (166 lines, last written at `914e699`/`9988755`)
-already does a per-file inventory of all six upstream units — `app.rs`,
-`window.rs` + `window.blp`, `timer.rs`, `preferences_window.rs` +
-`preferences-window.blp`, `help-overlay.blp`, and the `AboutWindow::from_appdata`
-call — against the six port files. Re-deriving that whole document here would
-duplicate it; this report records what I independently re-verified by reading
-upstream and the port side by side, and — this is the part the existing
-document does not cover — what it admits it never checked.
+Re-run from scratch this round rather than diffed against the previous
+pass's row count (see `.reports/accountability-ensurance.md` for why: the
+previous passes' reports were pinned to `63fce02`, three commits behind
+current `ruby` HEAD, and one of the files they rely on,
+`component-inventory.md`, contained a materially false claim that survived
+one prior accountability pass unfixed).
 
 ## The file map (re-confirmed against `origin/main`)
 
@@ -30,54 +21,69 @@ git ls-tree -r --name-only origin/main | grep -E '\.(rs|blp|ui)$'
 returns exactly: `src/main.rs`, `src/app.rs`, `src/window.rs`, `src/timer.rs`,
 `src/preferences_window.rs`, `src/i18n.rs`, `src/config.rs`,
 `data/ui/window.blp`, `data/ui/preferences-window.blp`,
-`data/gtk/help-overlay.blp`. Every one of these has a named counterpart in
-`PORTING.md`'s file map and in `lib/solanum_rb/*.rb`. No upstream unit — no
-window, no dialog, no shortcuts surface — is missing a port file.
+`data/gtk/help-overlay.blp`. Every one has a named counterpart in
+`PORTING.md`'s file map and in `lib/solanum_rb/*.rb`. No upstream window,
+dialog or shortcuts surface is missing a port file.
 
-## Per-unit widget read (window, preferences, shortcuts, about, app)
+Also present on the upstream side but easy to miss in a `.rs`/`.blp`-only
+grep, and confirmed carried: `data/org.gnome.Solanum.gschema.xml` →
+`data/org.gnome.Solanum.Rb.gschema.xml` + `lib/solanum_rb/settings.rb`;
+`data/org.gnome.Solanum.metainfo.xml.in.in` → `lib/solanum_rb/appdata.rb`;
+`data/ui/style.css` → `data/style.css`; the two `.ogg` sounds + GstPlay
+wiring → `lib/solanum_rb/sound.rb`; and the full `po/` catalogue (47
+locales, `LINGUAS`, `POTFILES.in`) — all tracked under `ruby`.
 
-I read `data/ui/window.blp` against `lib/solanum_rb/window.rb` widget by
-widget: `Adw.ApplicationWindow`/`Adwaita::ApplicationWindow` (title, icon,
-default size 360×360, height-request 294, default-widget), `Adw.ToolbarView`,
-`Adw.HeaderBar` (`show-title: false`), the vertical `Gtk.Box` (`main-box`/
-`main-box` — see translation-parity's css note), `lap_label`
-(`heading`,`dim-label`), `timer_label` (`timer-label`,`accent`,`blinking`),
-the `Gtk.CenterBox`, `timer_button`/`skip_button` (`circular`,`large`,
-(+`suggested-action` on the timer button)), `menu_button` (`circular`,
-`primary: true`), and the `Adw.Breakpoint` at `min-width: 800sp and
-min-height: 800sp`. All present, same CSS classes, same action names
-(`win.toggle-timer`, `win.skip`, `win.reset`, `win.show-help-overlay`),
-same menu structure (two sections: reset alone, then preferences/shortcuts/
-about).
+## Units identified (5 widget-bearing units + the i18n/config support layer)
 
-Did the same for `data/ui/preferences-window.blp` → `preferences_dialog.rb`
-(5 rows: 3 spin rows + session-count spin + fullscreen switch, same titles,
-same GSettings bindings), `data/gtk/help-overlay.blp` →
-`shortcuts_dialog.rb` (4 items + the un-actioned "Show Primary Menu" row,
-all under the `"shortcut window"` msgctxt), and the `show_about` body of
-`src/app.rs` → `about_dialog.rb` (developers, the two funding links, the
-three credit/acknowledgement sections, `translator-credits`). I found no
-widget, CSS class, signal, or action present on one side and absent on the
-other for any of these five units.
+1. **Application shell** — `src/app.rs` + `src/main.rs` → `application.rb` +
+   `exe/solanum-rb` + `about_dialog.rb`. Actions: `about`, `preferences`,
+   `quit`, `toggle-timer`, `skip`. Accels: `<Primary>comma`, `<Primary>q`,
+   plus the hand-added `<Primary>question` for the shortcuts dialog (no
+   upstream `set_help_overlay` hook exists in the Ruby bindings for
+   `Adw.ShortcutsDialog`, documented in `window.rb`).
+2. **Main window** — `src/window.rs` + `data/ui/window.blp` → `window.rb`.
+   Widget tree, 4 window actions (`win.toggle-timer`, `win.reset`,
+   `win.skip`, `win.show-help-overlay`), the breakpoint, the primary menu
+   (3 items + reset), the notification flow, the stylesheet classes.
+3. **Timer** — `src/timer.rs` → `timer.rb`. Deliberately not a GObject (see
+   `PORTING.md`); countdown/lap behaviour only, no widget.
+4. **Preferences** — `src/preferences_window.rs` +
+   `data/ui/preferences-window.blp` → `preferences_dialog.rb`. 5 bound rows,
+   `Adw.PreferencesDialog` instead of the deprecated `Adw.PreferencesWindow`.
+5. **Shortcuts** — `data/gtk/help-overlay.blp` → `shortcuts_dialog.rb`.
+   `Adw.ShortcutsDialog` instead of the deprecated, Ruby-unconstructable
+   `Gtk.ShortcutsWindow`.
 
-## Round 2: the scan ran
+Support layer (not independently widget-bearing, but user-visible through
+the units above): `config.rb`, `i18n.rb`, `appdata.rb`, `paths.rb`,
+`settings.rb`, `sound.rb`.
 
-The gap this section used to describe is closed. I built the GI symbol
-table with `gir-symbols.sh` inside `nix develop` (against the Nix store's
-gtk4 4.22 / libadwaita 1.9 `.gir` files), ran `component-scan.sh` against
-both a worktree of `origin/main` and the `ruby` tree, and diffed the two
-TSVs per mapped file group. The reconciliation, including the three
-apparent widget/signal mismatches the diff raised and how each resolved by
-reading the flagged file (shared-factory undercounting in both spin rows
-and shortcuts items; `Timer`'s GObject signals vs the port's plain-Ruby
-callback procs), is recorded in `.reports/COMPONENT_PARITY.md`'s "Round 2:
-tool-assisted scan, confirming the hand read" section rather than repeated
-here.
+## What this pass explicitly did not re-run
 
-`src/timer.rs` and `src/config.rs` still got a lighter read than the five UI
-units in the sense that I did not re-derive their Rust line by line — but
-`component-scan.sh`'s own output, run against both trees, confirms they
-produce zero widget/CSS/signal/action rows on either side (there is nothing
-for the scanner to find: neither file touches a GTK type), so there is no
-tool-assisted check left undone for them; a scan has nothing further to add
-beyond `PORTING.md`'s description of the `Timer`/`Config` correspondences.
+- `component-scan.sh` (the GI-symbol-level scanner) was not re-run this
+  round. The commits since the last scan (`bafffba` rewriting
+  `component-inventory.md`'s prose, `3164e13` adding `po/POTFILES.in`,
+  `6bfc160` adding sound assertions to the drive script) touch no widget,
+  signal, action or CSS class in any of the five units above — confirmed by
+  reading each diff (`git show --stat`) rather than assumed. Flagging this
+  explicitly per the skill's own rule about naming what was not re-run
+  rather than implying blanket freshness.
+- Screenshot-level rendering confirmation (skill step 4/5) is not redone
+  here; it is exercised by the drive scripts, which this round re-ran live
+  (95/95 + 8/8, DRIVE OK twice) — see `.reports/TEST_PARITY.md`.
+
+## Finding carried into `COMPONENT_PARITY.md` / `TEST_PARITY.md`
+
+Identification surfaces one component whose *presence* is not in question
+(it exists, under `i18n.rb`) but whose *completeness* is: upstream's
+`src/i18n.rs` exports 12 wrapper functions (`i18n`, `i18n_f`, `i18n_k`,
+`ni18n`, `ni18n_f`, `ni18n_k`, `pi18n`, `pi18n_f`, `pi18n_k`, `pni18n`,
+`pni18n_f`, `pni18n_k`); `lib/solanum_rb/i18n.rb` implements 4 (`_`, `f_`,
+`k_`, `p_`). The missing 8 are the entire plural-dispatch family. One of
+them, `ni18n_f`, is called by upstream `window.rs` for the live lap label —
+not dead code, not test-only. See `COMPONENT_PARITY.md` and
+`TEST_PARITY.md` for the behavioural consequence (a real rendering bug in
+four shipped locales), which is a `component-parity`/`test-parity` finding
+rather than an identification one, but the missing component is named here
+because identification is where "does every upstream symbol have a port
+counterpart" belongs.
