@@ -24,8 +24,25 @@ module SolanumRb
       catalogue.fetch(key(context, text), text)
     end
 
-    # Upstream's runtime strings have a single positional slot, spelled `{}`.
-    def f_(text, value) = _(text).sub('{}', value.to_s)
+    # Upstream's runtime strings may carry any number of positional slots,
+    # all spelled `{}`. Each is filled from `values` in order, left to
+    # right — the same walk as upstream's `freplace`.
+    def f_(text, *values)
+      index = 0
+      _(text).gsub('{}') do
+        value = values[index]
+        index += 1
+        value.to_s
+      end
+    end
+
+    # Upstream's `kreplace`: named slots spelled `{name}`, each filled from
+    # `kwargs` everywhere it appears in the string.
+    def k_(text, **kwargs)
+      kwargs.reduce(_(text)) do |string, (name, value)|
+        string.gsub("{#{name}}", value.to_s)
+      end
+    end
 
     def key(context, text) = "#{context}#{CONTEXT_SEPARATOR}#{text}"
 

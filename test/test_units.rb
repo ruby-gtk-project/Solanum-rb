@@ -147,6 +147,36 @@ section('the catalogue') do
   use_locale('C')
 end
 
+# Ported from upstream's test_i18n_f and test_i18n_k (src/i18n.rs), which
+# exercise freplace/kreplace directly against literal format strings rather
+# than catalogue entries. `C` means no translation, so `_` is the identity
+# and these pin the placeholder substitution alone.
+section('the placeholder helpers') do
+  I = SolanumRb::I18n
+
+  check('a single trailing placeholder fills in') { I.f_('{} param', 'one') == 'one param' }
+  check('a mid-string placeholder fills in') { I.f_('middle {} param', 'one') == 'middle one param' }
+  check('a placeholder at the end fills in') { I.f_('end {}', 'one') == 'end one' }
+  check('multiple placeholders fill in order') do
+    I.f_('multiple {} and {}', 'one', 'two') == 'multiple one and two'
+  end
+
+  check('a single keyword placeholder fills in') { I.k_('{one} param', one: 'one') == 'one param' }
+  check('a mid-string keyword placeholder fills in') do
+    I.k_('middle {one} param', one: 'one') == 'middle one param'
+  end
+  check('a keyword placeholder at the end fills in') { I.k_('end {one}', one: 'one') == 'end one' }
+  check('multiple keyword placeholders fill in by name') do
+    I.k_('multiple {one} and {two}', one: '1', two: 'two') == 'multiple 1 and two'
+  end
+  check('keyword placeholders fill in regardless of order') do
+    I.k_('multiple {two} and {one}', one: '1', two: 'two') == 'multiple two and 1'
+  end
+  check('a repeated keyword placeholder fills in every occurrence') do
+    I.k_('multiple {one} and {one}', one: '1', two: 'two') == 'multiple 1 and 1'
+  end
+end
+
 # Upstream's -Dprofile switch. Both profiles have to be reachable from one
 # process, so each check sets the variable itself.
 def with_profile(value)

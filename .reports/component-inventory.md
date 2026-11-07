@@ -156,11 +156,16 @@ branch. No net-new `lib/*.rb` file is required by this survey.
   `data/org.gnome.Solanum.Rb.gschema.xml` (matching `settings.rb`'s
   `SCHEMA_ID`), is present and was not diffed key-by-key against upstream in
   this pass.
-- Translation-string coverage (`po/`) is explicitly out of scope for
-  component identification — hand off to `translation-parity`.
-- `component-parity` (the paired skill) should be run next to score
-  CSS-class/signal/action completeness per file now that the file-level
-  mapping above is established — this survey did not run
-  `component-scan.sh` against both trees because `gir-symbols.sh` requires
-  the Ruby GTK4/libadwaita `.gir` files from the `nix develop` shell, which
-  this step intentionally avoided entering since it writes no app code.
+- I did not check translation-string coverage (`po/`) in this pass: I
+  surveyed file-level component mapping only, and read nothing in `po/` to
+  confirm every upstream msgid has a port-side counterpart. That check, if
+  it has not already been done elsewhere, still needs to happen before
+  translation coverage can be called verified — I have not verified it
+  myself.
+- This survey itself did not run `component-scan.sh` against both trees —
+  I avoided entering the `nix develop` shell in this pass since it writes
+  no app code and `gir-symbols.sh` needs the Ruby GTK4/libadwaita `.gir`
+  files from inside it. That scan has since been run, in a later pass, and
+  its reconciliation against this file-level mapping is recorded in
+  `.reports/COMPONENT_PARITY.md`'s "Round 2" section and in
+  `.reports/component-identification.md`.

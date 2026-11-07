@@ -134,3 +134,51 @@ tree, and `Timer`/`Config` (the two remaining upstream `.rs` files) got a
 lighter pass. I found nothing wrong in them either, but "I read it and it
 looked right" is a weaker claim than a scan, and the ledger should say so
 rather than imply otherwise.
+
+## Round 2: tool-assisted scan, confirming the hand read
+
+Ran `gir-symbols.sh` inside `nix develop` against the Nix store's `.gir`
+files (gtk4 4.22, libadwaita 1.9), then `component-scan.sh` against a
+worktree of `origin/main` and against the `ruby` tree, and diffed the two
+TSVs per file-group (`window.blp`+`window.rs` → `window.rb`,
+`preferences-window.blp`+`preferences_window.rs` → `preferences_dialog.rb`,
+`help-overlay.blp` → `shortcuts_dialog.rb`, `app.rs` → `application.rb`).
+
+Three apparent mismatches, all resolved by reading the flagged file rather
+than being gaps:
+
+- **`Adw.SpinRow` 4 (upstream) vs 1 (port) and `Gtk.Adjustment` 4 vs 1**:
+  `preferences_dialog.rb` builds all four spin rows through one `spin_row`
+  factory method; the scanner counts a shared factory's call site once,
+  not once per widget it produces (`lap_row`, `short_break_row`,
+  `long_break_row`, `session_count_row` each call it) — four widgets render,
+  one line matched.
+- **`Gtk.ShortcutsShortcut` 4 (upstream) vs `Adw.ShortcutsItem` 2 (port)**:
+  same shared-factory effect — `shortcuts_dialog.rb`'s `item` helper builds
+  three of the four rows (`preferences_item`, `shortcuts_item`, `quit_item`),
+  and `menu_item` is built directly, so two call sites produce four items.
+  The type substitution itself (`Gtk.ShortcutsWindow` → `Adw.ShortcutsDialog`)
+  is the documented migration already named in `PORTING.md` and in the class
+  comment of `shortcuts_dialog.rb`.
+- **`signal lap`/`signal countdown-update` (upstream `window.rs`) have no
+  match in `window.rb`**: upstream's `Timer` is a GObject that emits these as
+  real signals; the port's `Timer` (`lib/solanum_rb/timer.rb`) is a plain
+  Ruby object that takes `on_lap:`/`on_countdown:` callback procs instead —
+  an intentional, documented architecture choice (no GObject subclassing
+  needed for a non-widget model), not a dropped signal. `window.rb` wires
+  those procs where upstream connects the signals.
+
+Every CSS class the scan found in `window.blp`+`window.rs` (`accent`,
+`blinking`, `circular`, `devel`, `dim-label`, `heading`, `large`,
+`large-timer`, `main-box`, `suggested-action`, `timer-label`, `title-4`) has
+an exact-name match in `window.rb`'s scan output — full CSS-class parity,
+tool-confirmed rather than asserted. Every upstream action in the scanned
+units (`win.skip`, `win.toggle-timer`, `win.reset`, `win.menu`,
+`win.show-help-overlay`, `app.preferences`, `app.quit`) has a counterpart in
+the port's scan output (`win.menu`'s role is covered by the dedicated
+`MENU_ACCELERATOR` row documented above and in `shortcuts_dialog.rb`).
+
+This closes the caveat above for the five units it already covered; `Timer`
+and `Config` have no widgets, CSS, or GTK actions for `component-scan.sh` to
+compare (confirmed by their absence from both scan outputs), so a GIR-based
+scan has nothing further to add for those two files beyond the hand read.

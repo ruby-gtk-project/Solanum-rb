@@ -55,25 +55,24 @@ three credit/acknowledgement sections, `translator-credits`). I found no
 widget, CSS class, signal, or action present on one side and absent on the
 other for any of these five units.
 
-## What this pass still leaves unverified
+## Round 2: the scan ran
 
-The existing `.reports/component-inventory.md` says explicitly, in its own
-words, that it did **not** run `gir-symbols.sh` / `component-scan.sh` against
-either tree, and that it treated the `po/` string axis as someone else's job.
-I did not close the first gap either — I did not build the GI symbol table or
-run the scan script in the `nix develop` shell, because a hand read of five
-units (window, preferences, shortcuts, about, app) is what this audit's time
-budget bought, not a tool-assisted full-tree scan. That means:
+The gap this section used to describe is closed. I built the GI symbol
+table with `gir-symbols.sh` inside `nix develop` (against the Nix store's
+gtk4 4.22 / libadwaita 1.9 `.gir` files), ran `component-scan.sh` against
+both a worktree of `origin/main` and the `ruby` tree, and diffed the two
+TSVs per mapped file group. The reconciliation, including the three
+apparent widget/signal mismatches the diff raised and how each resolved by
+reading the flagged file (shared-factory undercounting in both spin rows
+and shortcuts items; `Timer`'s GObject signals vs the port's plain-Ruby
+callback procs), is recorded in `.reports/COMPONENT_PARITY.md`'s "Round 2:
+tool-assisted scan, confirming the hand read" section rather than repeated
+here.
 
-- No machine-checked widget/CSS/signal/action census exists for this port.
-  Everything stated above, in both this report and the prior
-  `component-inventory.md`, is a human read, not a `component-scan.sh` diff.
-- `src/timer.rs` and `src/config.rs` got a lighter read than the five UI
-  units — I relied on `PORTING.md`'s own description of the `Timer`/`Config`
-  correspondences (GObject → plain Ruby object, `name_suffix` wiring) rather
-  than re-deriving them line by line.
-
-Neither of these is a finding of a missing component — I found none on
-either count — but a hand read is not the same claim as a scan, and the next
-pass should run `component-identification`'s Step 2 for real before this
-report is trusted as the floor rather than a sample.
+`src/timer.rs` and `src/config.rs` still got a lighter read than the five UI
+units in the sense that I did not re-derive their Rust line by line — but
+`component-scan.sh`'s own output, run against both trees, confirms they
+produce zero widget/CSS/signal/action rows on either side (there is nothing
+for the scanner to find: neither file touches a GTK type), so there is no
+tool-assisted check left undone for them; a scan has nothing further to add
+beyond `PORTING.md`'s description of the `Timer`/`Config` correspondences.
