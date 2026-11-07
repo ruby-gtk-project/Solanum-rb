@@ -1,171 +1,93 @@
-# Component inventory — Solanum upstream vs. `ruby` port
+# Component inventory — Solanum-rb
 
-Surveyed against `origin/main` (Rust/libadwaita, GResource-based) with the
-`component-identification` skill. Solanum is a small app — one window, one
-preferences surface, one shortcuts surface, one about dialog, plus the
-application shell — so the whole app is one unit rather than a sliced survey.
+Upstream is a small Rust/gtk-rs app (one window, one preferences window, no
+list views, no pages). Surveyed from `origin/main` via
+`git ls-tree -r --name-only origin/main` and a read of every `src/*.rs`,
+`data/ui/*.blp`, `data/gtk/*.blp`, the gschema, the gresource manifest and the
+metainfo, compared against `lib/` on `ruby`.
 
-Upstream has **no `.ui` files**: `window.blp` and `preferences-window.blp` are
-blueprint sources compiled to `.ui` at build time and loaded from a
-GResource; `help-overlay.blp` likewise. These three blueprints are read
-alongside their Rust subclass for each component below, per the
-component-identification skill's "one component is often two upstream files"
-rule.
-
-## Legend
-
-- **Kind**: `window` / `dialog` / `widget-class` / `data` (schema, resource
-  manifest, catalogue)
-- **Exists**: whether `ruby` branch `lib/` already has the mapped file, and
-  whether its content covers the upstream component
-
----
-
-## 1. Application shell — `SolanumApplication`
-
-| Upstream file(s) | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `src/app.rs`, `src/main.rs` | `lib/solanum_rb/application.rb` | application | **Yes** — startup/activate, icon theme registration, stylesheet loading, `app.about`/`app.preferences`/`app.quit`/`app.toggle-timer`/`app.skip` actions, `<Primary>comma`/`<Primary>q`/`<Primary>question` accelerators all present |
-| `src/config.rs` | `lib/solanum_rb/config.rb` | data | **Yes** — `APP_ID`, `COPYRIGHT`, `VERSION`, profile/devel suffix all ported; `PKGDATADIR`/`LOCALEDIR` mapped to `Paths` since there is no GResource |
-| `src/i18n.rs` | `lib/solanum_rb/i18n.rb` | data | **Yes** — `i18n`/`ni18n`/`pi18n`/`pni18n` family and the `{}`/`{key}` interpolation helpers ported, including the test-covered formatting behaviour |
-
-**Component detail** — `SolanumApplication` (app.rs):
-
-| Item | Upstream | Port |
-|---|---|---|
-| Actions | `about`, `preferences`, `quit`, `toggle-timer`, `skip` | same 5, in `install_actions` |
-| Accels | `app.preferences` → `<Primary>comma`; `app.quit` → `<Primary>q` | same 2 (plus `win.show-help-overlay` → `<Primary>question`, added by hand since `AdwShortcutsDialog` has no `set_help_overlay` hook — noted in-code) |
-| About window | `AboutWindow::from_appdata`, developer/icon/sound credits, Patreon + GitHub Sponsors links, supporters | `AboutDialog#build` — same links/credits, reading generated metainfo instead of a GResource |
-
-## 2. Main window — `SolanumWindow` (`src/window.rs` + `data/ui/window.blp`)
-
-| Upstream file(s) | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `src/window.rs`, `data/ui/window.blp` | `lib/solanum_rb/window.rb` | window | **Yes** — full widget tree, actions, signals and CSS all present (454 lines; see detail below) |
-| `src/timer.rs` | `lib/solanum_rb/timer.rb` | behaviour (GObject, no widget) | **Yes** — `countdown-update`/`lap` signals, start/stop/running, duration-from-minutes, same 100ms tick |
-
-**Widget tree** (`window.blp` template `$SolanumWindow : Adw.ApplicationWindow`):
-
-| Widget | × | CSS | Signals/actions | Port method |
-|---|---:|---|---|---|
-| `Adw.ApplicationWindow` | 1 | `devel` (conditional, devel build only) | `default-widget: timer_button`; installs `win.toggle-timer`, `win.reset`, `win.skip` | `window` |
-| `Adw.ToolbarView` | 1 | — | — | `toolbar_view` |
-| `Adw.HeaderBar` | 1 | `show-title: false` | — | `header_bar` |
-| `Gtk.Box` (main) | 1 | `main-box` | vertical, `valign: center`, spacing 6 | `main_box` |
-| `Gtk.Label` (lap) | 1 | `heading`, `dim-label` (→ `title-4`/no-`heading` at the large breakpoint) | — | `lap_label` |
-| `Gtk.Label` (timer) | 1 | `timer-label`, `accent`, `blinking` (→ +`large-timer` at breakpoint) | — | `timer_label` |
-| `Gtk.CenterBox` | 1 | — | `margin-bottom: 48`, `halign: center` | inline in `build` |
-| `Gtk.Box` (button row) | 1 | — | spacing 12, `halign: center` | inline |
-| `Gtk.Button` (timer/play-pause) | 1 | `circular`, `large`, `suggested-action` (toggled off while running) | `action-name: win.toggle-timer` | `timer_button` |
-| `Gtk.Button` (skip) | 1 | `circular`, `large` | `action-name: win.skip` | `skip_button` |
-| `Gtk.MenuButton` (primary menu) | 1 | `circular` | `primary: true`, `menu-model: app_menu` | `menu_button` |
-| `Adw.Breakpoint` (`large_text_bp`) | 1 | — | `condition("min-width: 800sp and min-height: 800sp")`; `apply`/`unapply` swap the CSS above | `apply_fullscreen`/breakpoint wiring in `build` |
-| `menu app_menu` (3 items) | 1 | — | `win.reset`, `app.preferences`, `win.show-help-overlay`, `app.about` | `window`'s menu-model construction |
-
-Window-level actions: `win.toggle-timer`, `win.reset`, `win.skip`,
-`win.show-help-overlay` — all 4 present in `install_actions`.
-
-Behavioural signals from `Timer`/notification flow, all present in
-`window.rb`: `countdown-update` → `on_countdown`, `lap` → `on_lap`,
-fullscreen-on-break toggling, fullscreen desktop notification with
-`app.toggle-timer`/`app.skip` buttons (`send_notification`), the lap-label
-pluralisation (`ni18n_f`/`update_lap_label`), and the blinking/suggested-action
-CSS swap on start/stop (`run_timer`/`pause_timer`).
-
-CSS classes from `data/ui/style.css` (`button.large`, `.main_box`/`main-box`,
-`.blinking`+`@keyframes blinkingText`, `.timer-label`, `.large-timer`): ported
-onto the matching Ruby widgets (`lap_label`, `timer_label`, `main_box`,
-`timer_button`). The stylesheet file itself (`data/style.css`) is read
-directly by `Application#load_stylesheet`.
-
-## 3. Preferences — `SolanumPreferencesWindow` (`src/preferences_window.rs` + `data/ui/preferences-window.blp`)
-
-| Upstream file(s) | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `src/preferences_window.rs`, `data/ui/preferences-window.blp` | `lib/solanum_rb/preferences_dialog.rb` | dialog | **Yes** — all 5 rows + bindings present; upstream's deprecated `Adw.PreferencesWindow` is intentionally rehosted on `Adw.PreferencesDialog`, documented in-file |
-
-| Widget | × | GSettings binding | Port |
-|---|---:|---|---|
-| `Adw.PreferencesPage` | 1 | — | `page` |
-| `Adw.PreferencesGroup` (session lengths) | 1 | — | group accessor |
-| `Adw.SpinRow` (`lap_spin`) | 1 | `lap-length` ↔ `value` | present |
-| `Adw.SpinRow` (`short_break_spin`) | 1 | `short-break-length` ↔ `value` | present |
-| `Adw.SpinRow` (`long_break_spin`) | 1 | `long-break-length` ↔ `value` | present |
-| `Adw.PreferencesGroup` (long-break count) | 1 | — | present |
-| `Adw.SpinRow` (`session_count_spin`) | 1 | `sessions-until-long-break` ↔ `value` | present |
-| `Adw.PreferencesGroup` (fullscreen) | 1 | — | present |
-| `Adw.SwitchRow` (`fullscreen_switch`) | 1 | `fullscreen-break` ↔ `active` | present |
-| `Gtk.Adjustment` (shared lower/upper/step, bound across all 4 spin rows) | 1 shared + 3 bound | — | `LOWER`/`UPPER` constants + shared adjustment in `preferences_dialog.rb` |
-
-## 4. Keyboard shortcuts — `help-overlay.blp`
-
-| Upstream file(s) | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `data/gtk/help-overlay.blp` (no backing Rust source — standalone `.blp` object per the skill's "one unit per standalone .blp with no backing source" rule) | `lib/solanum_rb/shortcuts_dialog.rb` | dialog | **Yes**, on a different widget class: `Gtk.ShortcutsWindow` is deprecated in GTK 4.22 and unconstructable from the Ruby bindings, so the port uses `Adw.ShortcutsDialog` — documented in-file |
-
-| Shortcut | Action | Port |
-|---|---|---|
-| "Show Primary Menu" | `win.menu` (upstream's action name; no actual `win.menu` action exists upstream either — it is informational F10 binding) | present, spelled out as a literal accelerator since there is no action behind it |
-| "Show Preferences" | `app.preferences` | present |
-| "Show Keyboard Shortcuts" | `win.show-help-overlay` | present |
-| "Quit" | `app.quit` | present |
-
-## 5. About dialog
-
-Built in code (`app.rs::show_about`), not from a `.blp`/`.ui`. Already
-covered under §1 app shell; cross-referenced here as its own component since
-it is a distinct top-level window:
-
-| Upstream file(s) | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `src/app.rs` (`show_about`), `data/org.gnome.Solanum.metainfo.xml.in.in` | `lib/solanum_rb/about_dialog.rb`, `lib/solanum_rb/appdata.rb` | dialog + data | **Yes** — `Adw.AboutWindow::from_appdata` behaviour reimplemented by hand (`Appdata` reads the generated metainfo off disk, with a `NullAppdata` fallback since there is no GResource to guarantee its presence); same links/credit sections/acknowledgements |
-
-## 6. GSettings schema
-
-| Upstream file | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `data/org.gnome.Solanum.gschema.xml` (keys: `lap-length`, `short-break-length`, `long-break-length`, `sessions-until-long-break`, `fullscreen-break`) | `lib/solanum_rb/settings.rb` | data | **Yes** — schema ID rehosted as `org.gnome.Solanum.Rb` (own schema file expected under `data/`, compiled by `rake schema` per in-code comment); all 5 keys consumed from `window.rb`/`preferences_dialog.rb` |
-
-## 7. GResource manifest / data files
-
-| Upstream file | → `lib/*.rb` | Kind | Exists |
-|---|---|---|---|
-| `data/solanum.gresource.xml.in` | `lib/solanum_rb/paths.rb` | data | **Yes, by substitution** — there is no GResource in the port; every file it would have bundled (`window.ui`, `preferences-window.ui`, `style.css`, `help-overlay.ui`, `chime.ogg`, `beep.ogg`, the appdata) is instead read straight off `data/` through `Paths`, and `.ui`/`.blp` files are never generated at all since widgets are built declaratively in Ruby |
-| `data/sounds/org.gnome.Solanum-{beep,chime}.ogg` | consumed by `lib/solanum_rb/sound.rb` | asset | **Yes** — `Sound#play` drives a `playbin` through `Paths.sound`, mirroring upstream's `gstreamer_play::Play` usage from `window.rs` |
-| `data/icons/**` | registered by `Application#register_icons` | asset | **Yes** |
-
-## 8. `po/` catalogue
-
-| Upstream file | Port equivalent | Kind | Exists |
-|---|---|---|---|
-| `po/POTFILES.in` (lists `app.rs`, `window.rs`, the 3 `.blp` files, the appdata/desktop/gschema XML as translatable sources) | `lib/solanum_rb/paths.rb#po_dir` points at this repo's own `po/` | data | **Not verified in this pass** — the port's own `po/POTFILES.in`/catalogue was not read; translation-string parity (the `_()`/`i18n`/`ni18n_f` call sites across `window.rb`, `preferences_dialog.rb`, `shortcuts_dialog.rb`, `about_dialog.rb`, `application.rb`) is in scope for the `translation-parity` skill, not this component survey |
-
----
+Scope note: upstream has no list rows, pages, or repeated widgets — it is one
+window with one countdown display, three buttons, a primary menu, and one
+preferences window with five bound rows. The whole app is one unit.
 
 ## Summary
 
-Every upstream user-facing component — the application shell and its
-actions/accelerators, the main window and its full widget tree, the timer
-object, the preferences dialog, the shortcuts dialog, and the about dialog —
-already has a corresponding, content-complete file on `lib/` in the `ruby`
-branch. No net-new `lib/*.rb` file is required by this survey.
+| | Upstream | `ruby` branch |
+|---|---|---|
+| Source files | 5 `.rs` + 2 `.blp` + 1 shortcuts `.blp` | 11 `.rb` under `lib/solanum_rb/` + 1 `lib/solanum/rb.rb` |
+| Windows | `SolanumWindow`, `SolanumPreferencesWindow` | present |
+| Dialogs | About (built in `app.rs`, not templated), Shortcuts (`help-overlay.blp`) | present |
+| GSettings schema | `org.gnome.Solanum.gschema.xml`, 5 keys | present, app-id renamed |
+| GResource manifest | `solanum.gresource.xml.in` | N/A by design (Ruby port has no `.ui`/GResource; widgets built in code per house style) |
+| Sound | GstPlay via `gstreamer_play` crate, 2 `.ogg` | ported via `gstreamer_play` gem (ruby binding) — see `lib/solanum_rb/sound.rb` |
+| po/ catalogue | 45 `.po` files + `POTFILES.in`/`LINGUAS` | not carried (expected: translations are a separate upstream artifact; no `po/` present in `ruby`'s file list, not assessed further here) |
 
-**Open items for a follow-up pass (not component gaps, but worth flagging):**
+**Finding: every user-facing component in this small app already has a
+corresponding, already-built `lib/*.rb` file on `ruby`.** This is not a
+partial port — it is a small, fully-scoped app where the prior pass(es)
+already built the whole surface. No net-new widget code is called for by
+this survey; see Blockers/Notes below for the one open question worth
+flagging to the next pass.
 
-- `data/org.gnome.Solanum.gschema.xml`'s Ruby-side counterpart,
-  `data/org.gnome.Solanum.Rb.gschema.xml` (matching `settings.rb`'s
-  `SCHEMA_ID`), is present and was not diffed key-by-key against upstream in
-  this pass.
-- I did not check translation-string coverage (`po/`) in this pass: I
-  surveyed file-level component mapping only, and read nothing in `po/` to
-  confirm every upstream msgid has a port-side counterpart. That check, if
-  it has not already been done elsewhere, still needs to happen before
-  translation coverage can be called verified — I have not verified it
-  myself.
-- This survey itself did not run `component-scan.sh` against both trees —
-  I avoided entering the `nix develop` shell in this pass since it writes
-  no app code and `gir-symbols.sh` needs the Ruby GTK4/libadwaita `.gir`
-  files from inside it. That scan has since been run, in a later pass, and
-  its reconciliation against this file-level mapping is recorded in
-  `.reports/COMPONENT_PARITY.md`'s "Round 2" section and in
-  `.reports/component-identification.md`.
+## Components, upstream file → port file
+
+| Upstream file(s) | Kind | → `lib/*.rb` | Exists? |
+|---|---|---|---|
+| `src/main.rs` | entry point (gstreamer init, resource load, app name, locale setup) | `lib/solanum_rb.rb` (+ `exe/solanum-rb`) | yes |
+| `src/app.rs` — `SolanumApplication` (`Adw.Application` subclass): actions `app.about`, `app.preferences`, `app.quit`, `app.toggle-timer`, `app.skip`; accels `<Primary>comma`→`app.preferences`, `<Primary>q`→`app.quit`; About dialog built inline (not templated) | window/app class + 2 dialogs' worth of logic | `lib/solanum_rb/application.rb` (actions/accels/app lifecycle) + `lib/solanum_rb/about_dialog.rb` (About) | yes |
+| `src/config.rs` — `APP_ID`, `COPYRIGHT`, `PKGDATADIR`, `VERSION`, `LOCALEDIR` consts | config/constants | `lib/solanum_rb/config.rb` | yes |
+| `src/i18n.rs` — `i18n`/`ni18n`/`pi18n`/`pni18n` + `_f`/`_k` variants wrapping gettext | i18n helpers | `lib/solanum_rb/i18n.rb` | yes |
+| `src/window.rs` — `SolanumWindow` (`Adw.ApplicationWindow` subclass): template children `lap_label` (`Gtk.Label`), `timer_label` (`Gtk.Label`), `timer_button` (`Gtk.Button`), `menu_button` (`Gtk.MenuButton`), `large_text_bp` (`Adw.Breakpoint`); actions `win.toggle-timer`, `win.reset`, `win.skip`; signal `Timer#countdown-update`/`Timer#lap` consumed here; CSS classes applied dynamically: `large-timer`/`title-4`/`heading` (breakpoint apply/unapply), `blinking`/`suggested-action` (toggle/reset), `devel` (Devel build) | window | `lib/solanum_rb/window.rb` | yes |
+| `data/ui/window.blp` — template `$SolanumWindow : Adw.ApplicationWindow`; tree: `Adw.ToolbarView` → `Adw.HeaderBar` (top) + `Gtk.Box` (vertical, `main-box`) containing `Gtk.Label lap_label` (`heading dim-label`), `Gtk.Label timer_label` (`timer-label accent blinking`), `Gtk.CenterBox` → center `Gtk.Box` with `Gtk.Button timer_button` (`circular large suggested-action`, action `win.toggle-timer`) and `Gtk.Button skip_button` (`circular large`, action `win.skip`), end `Gtk.MenuButton menu_button` (`circular`, primary, menu-model `app_menu`); `Adw.Breakpoint large_text_bp`; menu `app_menu` with 2 sections: reset (`win.reset`), then preferences/shortcuts/about (`app.preferences`, `win.show-help-overlay`, `app.about`) | widget tree + menu (same component as `src/window.rs`) | `lib/solanum_rb/window.rb` (declarative `.tap`-built tree; primary menu built in same file) | yes |
+| `data/gtk/help-overlay.blp` — `Gtk.ShortcutsWindow help_overlay`, 1 section, 1 group "General Shortcuts", 4 `Gtk.ShortcutsShortcut` rows (`win.menu`, `app.preferences`, `win.show-help-overlay`, `app.quit`) | shortcuts dialog (standalone `.blp`, no backing Rust struct) | `lib/solanum_rb/shortcuts_dialog.rb` | yes |
+| `src/preferences_window.rs` — `SolanumPreferencesWindow` (`Adw.PreferencesWindow` subclass): template children `lap_spin`, `short_break_spin`, `long_break_spin`, `session_count_spin` (all `Adw.SpinRow`), `fullscreen_switch` (`Adw.SwitchRow`); binds all 5 to GSettings keys | preferences dialog | `lib/solanum_rb/preferences_dialog.rb` | yes |
+| `data/ui/preferences-window.blp` — template `$SolanumPreferencesWindow : Adw.PreferencesWindow`; one `Adw.PreferencesPage` → 3 `Adw.PreferencesGroup`s: (1) "Session Length" group with `lap_spin`/`short_break_spin`/`long_break_spin` (3× `Adw.SpinRow`, shared `Gtk.Adjustment` bounds via `bind`), (2) group with `session_count_spin` (`Adw.SpinRow`), (3) group with `fullscreen_switch` (`Adw.SwitchRow`) | widget tree (same component as `src/preferences_window.rs`) | `lib/solanum_rb/preferences_dialog.rb` | yes |
+| `src/timer.rs` — `Timer` (plain `glib::Object` subclass, not a widget): signals `countdown-update(u32,u32)`, `lap()`; `start`/`stop`/`set_duration`/`running` | non-widget model/behaviour | `lib/solanum_rb/timer.rb` | yes |
+| `data/org.gnome.Solanum.gschema.xml` — schema `org.gnome.Solanum`, keys `lap-length`(u,25), `short-break-length`(u,5), `long-break-length`(u,15), `sessions-until-long-break`(u,4), `fullscreen-break`(b,false) | GSettings schema | `lib/solanum_rb/settings.rb` + `data/org.gnome.Solanum.Rb.gschema.xml` | yes (renamed to `.Rb` app id, same 5 keys — confirm key names/defaults match exactly, see Notes) |
+| `data/org.gnome.Solanum.metainfo.xml.in.in` | metainfo (consumed at runtime for About dialog) | `lib/solanum_rb/appdata.rb` + `data/org.gnome.Solanum.Rb.metainfo.xml.in` | yes |
+| `data/sounds/org.gnome.Solanum-{beep,chime}.ogg` + GstPlay in `src/window.rs`/`app.rs` | sound playback component | `lib/solanum_rb/sound.rb` (uses `gstreamer_play` gem's `GstPlay::Play`) + `data/sounds/*.ogg` | yes |
+| `data/ui/style.css` | stylesheet (`.main-box`, `.timer-label`, `.blinking`, `.large-timer`) | `data/style.css` | yes (present; byte-for-byte diff not checked in this pass) |
+| `data/solanum.gresource.xml.in` | GResource manifest | N/A — house style builds widgets in code, no `.ui`/GResource layer | n/a by design |
+| `po/*.po` (45 locales), `po/POTFILES.in`, `po/LINGUAS` | translation catalogue | not present under `ruby` | **gap** — out of scope for `translation-parity` work, not attempted here |
+
+## Non-widget support files (for completeness, not components)
+
+| Upstream | Port |
+|---|---|
+| `Cargo.toml`/`Cargo.lock` (deps) | `solanum-rb.gemspec`, `nix/Gemfile` |
+| `meson.build` (build) | `flake.nix`, `Rakefile` |
+| `data/org.gnome.Solanum.desktop.in.in` | `data/org.gnome.Solanum.Rb.desktop.in` |
+| `data/icons/**` | present under `data/icons` (not diffed pixel-for-pixel) |
+
+## Notes / things the next pass should check, not act on here
+
+- **Gem wiring audit (required by this task's preamble) — verified clean.**
+  `gstreamer_play` is declared in the gemspec (`~> 1.1`), listed in
+  `nix/Gemfile`, `require`d in `lib/solanum_rb/sound.rb`, and the typelib
+  wiring (`gstStack`/`gstPluginPath`/`GI_TYPELIB_PATH`) is in `flake.nix`.
+  Proved live: `nix develop --command ruby -e 'require "gstreamer_play";
+  puts GstPlay.constants.size'` → `19`. No hand-rolled audio fallback found;
+  `Sound#build_play` calls `GstPlay::Play.new` directly and only rescues to
+  log-and-continue when GStreamer itself is unavailable (expected — audio
+  can't be proven in a headless test per the file's own comment).
+- **GSettings key parity** (`org.gnome.Solanum` vs `org.gnome.Solanum.Rb`
+  gschema) was read but not diffed key-by-key against
+  `lib/solanum_rb/settings.rb`'s usage; worth a quick confirm in the next
+  pass that all 5 keys/types/defaults match exactly.
+- **`po/` catalogue** has no counterpart under `ruby`. This is squarely
+  `translation-parity` scope, not `component-identification`, so it is
+  recorded here as a known gap and left untouched.
+- **Style.css** exists on both sides but was not diffed line-by-line in this
+  pass; given the CSS classes seen in `window.rs`/`window.blp`
+  (`main-box`, `timer-label`, `blinking`, `large-timer`, `accent`) a
+  `component-parity` pass should confirm `data/style.css` defines all of
+  them.
+
+## Conclusion
+
+No app code was written in this step, per instructions. Every upstream
+user-facing component for this app already maps onto an existing `lib/*.rb`
+file on `ruby`; there is no missing window, dialog, page, row, or menu to
+scaffold. The two concrete loose ends for a follow-up pass are the `po/`
+catalogue (translation-parity) and a byte-level confirm of `data/style.css`
+and the gschema key values (component-parity).
