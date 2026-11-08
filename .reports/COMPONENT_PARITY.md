@@ -3,21 +3,19 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `6bfc160` |
+| Port | `ruby` @ `0590067` |
 | Units checked | 5 / 5 (window, preferences, shortcuts, about, app) |
-| Units with parity | 4 / 5 — **main window has one confirmed behaviour gap** (see below) |
+| Units with parity | 5 / 5 on the four widget/CSS/signal/text axes — **the i18n support layer behind the window has a coverage gap**, not a behaviour gap (see below) |
 
-**Re-verified this round against `6bfc160`**, three commits past the last
-sha this file was pinned to (`63fce02`). Read `git show --stat` for each
-intervening commit (`bafffba` — prose-only rewrite of
-`component-inventory.md`; `3164e13` — adds `po/POTFILES.in`, no `lib/`
-change; `6bfc160` — adds assertions to `test/drive_solanum.rb`, no `lib/`
-change) and confirmed none touches a widget, CSS class, signal or action in
-any of the five units below, so the tables carried over from the previous
-pass are still accurate as *tables*. What is new this round, found by
-re-deriving the text-axis check rather than trusting the previous pass's
-"parity" verdict on the lap label: **the previous pass's row for the lap
-label text was wrong.** See "Confirmed regression" below.
+**Re-verified this round against `0590067`**, one commit past the sha
+(`6bfc160`) this file was last pinned to. That commit
+("Implement ni18n/pni18n plural dispatch") is a direct fix of this file's
+own previous finding: it adds `ni18n`/`ni18n_f`/`ni18n_k`/`pi18n_f`/
+`pi18n_k`/`pni18n`/`pni18n_f`/`pni18n_k` to `lib/solanum_rb/i18n.rb` and
+switches `window.rb`'s live lap label from `f_('Lap {}', @pomodoro_count)` to
+`ni18n_f('Lap {}', 'Lap {}', @pomodoro_count, @pomodoro_count)`, matching
+`src/window.rs`'s call shape exactly. I read the diff and confirmed the fix
+by hand (below) rather than trusting the commit message.
 
 This is a hand comparison on all four axes (count, style, behaviour, text),
 not a `component-scan.sh`-driven one — see `component-identification.md` for
@@ -37,7 +35,7 @@ that is and is not.
 | `Adw.ToolbarView` | 1 | 1 | — | — | — | parity |
 | `Adw.HeaderBar` | 1 | 1 | `show-title: false` | — | — | parity |
 | `Gtk.Box` (main) | 1 | 1 | `.main_box`→`.main-box` (see below) | — | — | parity |
-| `Gtk.Label` lap | 1 | 1 | `heading`,`dim-label` | — | `_("Long Break")`/`_("Short Break")` parity; `"Lap {}"` text is **not** parity — see below | **gap** (text axis only) |
+| `Gtk.Label` lap | 1 | 1 | `heading`,`dim-label` | — | `_("Long Break")`/`_("Short Break")` parity; `"Lap {}"` plural dispatch now matches upstream's call shape — see below | parity |
 | `Gtk.Label` timer | 1 | 1 | `timer-label`,`accent`,`blinking` | — | — | parity |
 | `Gtk.CenterBox` | 1 | 1 | — | — | — | parity |
 | `Gtk.Button` timer_button | 1 | 1 | `circular`,`large`,(+`suggested-action` when stopped) | `win.toggle-timer` | ✓ `_("Toggle Timer")` | parity |
@@ -48,52 +46,68 @@ that is and is not.
 | window actions | 4 (`toggle-timer`,`reset`,`skip`,`show-help-overlay`) | 4 | — | — | — | parity |
 | notification (`Gio::Notification`) | 1 built per lap change | 1 | — | buttons: `app.toggle-timer`, `app.skip` | ✓ 7 strings (`Back to Work`/`Ready to keep working?`/`Start Working`/`Break Time`/`Stretch your legs, and drink some water.`/`Start Break`/`Skip`), byte-identical | parity |
 
-## Confirmed regression (not a hypothetical): the lap label renders wrong in four shipped locales
+## Previous-round regression, now fixed and re-verified by hand
 
-`src/window.rs` sets the lap label with `ni18n_f("Lap {}", "Lap {}", count,
-&[count.to_s])` — upstream's plural-dispatch wrapper, called with identical
-singular/plural *msgid*s but passing the count through so the translation
-layer can still pick a different *msgstr* per language's own plural rule.
-`window.rb` (line 240) instead calls `f_('Lap {}', @pomodoro_count)` —
-positional interpolation only, no plural dispatch at all. `I18n#_`, which
-`f_` calls internally, always returns `catalogue.fetch(text, text)`, i.e.
-always `msgstr[0]`.
+Last round's main finding here: `src/window.rs` sets the lap label with
+`ni18n_f("Lap {}", "Lap {}", count, &[count.to_s])`, and `window.rb` instead
+called `f_('Lap {}', @pomodoro_count)` — no plural dispatch at all, so four
+shipped locales (`ca`, `fur`, `oc`, `pt_BR`, whose `.po` files give genuinely
+different singular/plural wording for this msgid) rendered the singular
+form on every lap past the first.
 
-Previous rounds' reports (`TRANSLATION_PARITY.md`, `TEST_PARITY.md`) treated
-this as a *theoretical* gap — "if a future string's singular/plural English
-differ, this would be wrong" — because English's `msgid`/`msgid_plural` for
-this one string are byte-identical. That framing is itself the false
-reassurance this round's `accountability-ensurance` pass is about: the
-*English* forms being identical says nothing about the *translated* forms,
-and a direct read of the shipped `.po` files shows four locales where they
-differ:
+Commit `0590067` fixes both halves: `I18n` gained real plural dispatch
+(`ni18n`/`ni18n_f`, parsing each catalogue's own `Plural-Forms` header into a
+proc rather than assuming English's "singular iff 1"), and `window.rb` now
+calls:
 
-```sh
-$ for f in po/*.po; do python3 - "$f" <<'PY'
-import sys,re
-text=open(sys.argv[1],encoding='utf-8').read()
-for b in text.split("\n\n"):
-    if 'msgid "Lap {}"' in b and 'msgid_plural' in b:
-        ms=re.findall(r'msgstr\[\d+\]\s+"((?:[^"\\]|\\.)*)"', b)
-        if len(set(ms))>1: print(sys.argv[1], ms)
-PY
-done
-po/ca.po    ['Volta {}', 'Voltes {}']
-po/fur.po   ['Zîr {}', 'Zîrs {}']
-po/oc.po    ['Torn {}', 'Torns {}']
-po/pt_BR.po ['Série {}', 'Séries {}']
+```ruby
+lap_label.label = ni18n_f('Lap {}', 'Lap {}', @pomodoro_count, @pomodoro_count)
 ```
 
-A Catalan, Friulian, Occitan or Brazilian-Portuguese user on this port sees
-"Volta 2" / "Zîr 3" / "Torn 5" / "Série 2" on every single non-first lap
-— the grammatically singular form — forever, because `I18n` has no code
-path that can ever select `msgstr[1]`. Upstream's user, on the same
-locale, sees "Voltes 2" / "Zîrs 3" / "Torns 5" / "Séries 2" (plural form)
-correctly from lap 2 onward. This is reproducible today, in 4 of the 47
-shipped languages, with no future string required to trigger it — it is a
-present-tense component-parity gap on the main window's text axis, not a
-latent risk. Downgrading the window unit's verdict above from full parity
-to "gap (text axis)" for this reason.
+— the same shape as upstream's call, byte-for-byte on the msgid pair. I
+re-ran the reproduction from last round's report to confirm, rather than
+trusting the fix on the diff alone:
+
+```sh
+$ nix develop --command xvfb-run -a ruby -r./lib/solanum_rb -e '
+  ENV["LANGUAGE"]="ca"; SolanumRb::I18n.reset!
+  puts SolanumRb::I18n.ni18n_f("Lap {}", "Lap {}", 1, 1)
+  puts SolanumRb::I18n.ni18n_f("Lap {}", "Lap {}", 2, 2)'
+Volta 1
+Voltes 2
+```
+
+Catalan (and, by the same code path, `fur`/`oc`/`pt_BR`) now renders the
+correct plural form from lap 2 onward, matching upstream — the *rendered
+text* axis for this specific widget, in all 47 shipped locales, is parity.
+The main window's verdict is restored to full parity on all four axes on
+that basis.
+
+**Important qualifier, not a reversal of the above:** tracing the mechanism
+behind that correct output (see `TEST_PARITY.md`'s headline finding) found
+that it is not reading the catalogue's `Plural-Forms` header at all —
+`store` drops the PO header entry (`msgid ""`) for every locale before
+`plural_rule` ever sees it, so `ni18n_f` always falls back to English's
+hardcoded binary rule regardless of which `.po` file is loaded. The
+*current* rendered text happens to be right in all 47 locales only because
+every shipped `.po` file's actual plural rule for `"Lap {}"` coincides with
+that hardcoded fallback (either identical `msgstr` forms, or a two-form rule
+mathematically equal to English's). Component-parity's own axis is
+"what does the user see," and what the user sees today is correct — so the
+widget-level verdict above stands — but the mechanism producing it is not
+the one upstream has, and the next plural string with real 3-or-4-form
+grammatical variation (10 of the 47 shipped locales ship such rules) would
+expose it immediately. Treating "the visible text matches today" as the
+end of the story, without naming that the match is coincidental rather than
+mechanistic, is exactly the gap this file's own previous round was written
+to correct — so this round names it rather than repeating it.
+
+**Also still true: the i18n support layer behind the window is not fully
+verified.** `ni18n_k`/`pni18n`/`pni18n_f`/`pni18n_k`, added by the same
+commit, are called by no test, driver check, or other line of `lib/`/`exe/`.
+That is a test-parity/accountability finding, not a component-parity one —
+but it is worth a pointer here since a reader of this file alone would
+otherwise conclude the i18n layer is simply "done."
 
 Stylesheet: `.main_box` (upstream, never matches the window's applied class,
 a pre-existing upstream bug) vs `.main-box` (port, matches) — a documented,

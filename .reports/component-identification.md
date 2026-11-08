@@ -3,14 +3,14 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `6bfc160` |
+| Port | `ruby` @ `0590067` |
 
-Re-run from scratch this round rather than diffed against the previous
-pass's row count (see `.reports/accountability-ensurance.md` for why: the
-previous passes' reports were pinned to `63fce02`, three commits behind
-current `ruby` HEAD, and one of the files they rely on,
-`component-inventory.md`, contained a materially false claim that survived
-one prior accountability pass unfixed).
+Re-checked this round against `0590067`, one commit past the sha
+(`6bfc160`) this file was last pinned to. That commit closes this file's own
+previous finding (below) — re-verified, not re-derived from scratch, since
+the file map and unit boundaries are unchanged (confirmed: `git show --stat
+0590067` touches only `lib/solanum_rb/i18n.rb`, `lib/solanum_rb/window.rb`
+and `test/test_units.rb`, none of which adds, removes or moves a unit).
 
 ## The file map (re-confirmed against `origin/main`)
 
@@ -72,18 +72,29 @@ the units above): `config.rb`, `i18n.rb`, `appdata.rb`, `paths.rb`,
   here; it is exercised by the drive scripts, which this round re-ran live
   (95/95 + 8/8, DRIVE OK twice) — see `.reports/TEST_PARITY.md`.
 
-## Finding carried into `COMPONENT_PARITY.md` / `TEST_PARITY.md`
+## Previous finding, now closed: all 12 upstream `i18n.rs` symbols have a port counterpart
 
-Identification surfaces one component whose *presence* is not in question
-(it exists, under `i18n.rb`) but whose *completeness* is: upstream's
-`src/i18n.rs` exports 12 wrapper functions (`i18n`, `i18n_f`, `i18n_k`,
-`ni18n`, `ni18n_f`, `ni18n_k`, `pi18n`, `pi18n_f`, `pi18n_k`, `pni18n`,
-`pni18n_f`, `pni18n_k`); `lib/solanum_rb/i18n.rb` implements 4 (`_`, `f_`,
-`k_`, `p_`). The missing 8 are the entire plural-dispatch family. One of
-them, `ni18n_f`, is called by upstream `window.rs` for the live lap label —
-not dead code, not test-only. See `COMPONENT_PARITY.md` and
-`TEST_PARITY.md` for the behavioural consequence (a real rendering bug in
-four shipped locales), which is a `component-parity`/`test-parity` finding
-rather than an identification one, but the missing component is named here
-because identification is where "does every upstream symbol have a port
-counterpart" belongs.
+Last round: upstream's `src/i18n.rs` exports 12 wrapper functions (`i18n`,
+`i18n_f`, `i18n_k`, `ni18n`, `ni18n_f`, `ni18n_k`, `pi18n`, `pi18n_f`,
+`pi18n_k`, `pni18n`, `pni18n_f`, `pni18n_k`); `lib/solanum_rb/i18n.rb`
+implemented 4 (`_`, `f_`, `k_`, `p_`), missing the entire plural-dispatch
+family.
+
+`0590067` adds the other 8 (`ni18n`, `ni18n_f`, `ni18n_k`, `pi18n_f`,
+`pi18n_k`, `pni18n`, `pni18n_f`, `pni18n_k` — `pi18n` itself maps onto the
+pre-existing `p_`). Re-read `lib/solanum_rb/i18n.rb` this round and confirmed
+all 12 upstream symbols now have a named counterpart by signature and
+purpose. This closes the identification-level gap.
+
+**This is identification, not verification, and this round that gap between
+the two is the whole story.** A symbol existing with the right name and the
+right arity is not the same claim as "it was exercised" or "it works" — see
+`.reports/TEST_PARITY.md` and `.reports/accountability-ensurance.md`:
+`ni18n_k`, `pni18n`, `pni18n_f` and `pni18n_k` are present but called by
+nothing in `lib/`, `test/` or `exe/`, and `ni18n`/`ni18n_f` — the two that
+*are* exercised by a test — turn out, on tracing, to never actually read the
+behaviour their names promise (the catalogue's own `Plural-Forms` header is
+silently dropped before the plural-dispatch code ever sees it). 12/12
+symbols present is true and is the limit of what this skill can state;
+naming that limit here too since a reader of only this file would otherwise
+read "12/12 symbols present" as "12/12 done."

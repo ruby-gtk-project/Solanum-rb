@@ -3,38 +3,57 @@
 | | |
 |---|---|
 | Upstream | `main` @ `bd2738d` |
-| Port | `ruby` @ `6bfc160` |
+| Port | `ruby` @ `0590067` |
 | Upstream messages | 44 (distinct `(msgctxt, msgid)` keys; see methodology note below) |
 
-**Re-checked this round against `6bfc160`**, four commits past the sha this
-ledger was last pinned to (`63fce02`). Of those, `3164e13` ("Add
-po/POTFILES.in, completing the translation catalogue") is squarely this
-ledger's own scope and is covered below. The other three (`bafffba`,
-`9808fbe`, `6bfc160`) touch no msgid, no `.po` file and no `I18n` call site.
+**Re-checked this round against `0590067`**, one commit past the sha
+(`6bfc160`) this ledger was last pinned to. That commit implements
+`ni18n`/`ni18n_f`/`ni18n_k`/`pi18n_f`/`pi18n_k`/`pni18n`/`pni18n_f`/
+`pni18n_k` in `lib/solanum_rb/i18n.rb` and rewires `window.rb`'s lap label
+to call `ni18n_f`, which is **this ledger's own previous finding, fixed**:
+`I18n` can now select `msgstr[1]` (or whichever index a catalogue's own
+`Plural-Forms` rule picks) for a plural entry, instead of always reading
+`msgstr[0]`.
 
 **What this ledger checks, and what it does not.** The *key axis* — does
 every upstream `(msgctxt, msgid)` exist in `po/*.po`, and only those keys —
-is 44/44, 0 gaps, 0 extra, genuinely. What this ledger does **not** check,
-and what previous rounds' notes here understated by reasoning from the
-English source instead of the shipped translations: `I18n` has no plural-
-*dispatch* method (`ni18n`/`pni18n` and their `_f`/`_k` forms are entirely
-absent from `lib/solanum_rb/i18n.rb`), so it can never select `msgstr[1]`
-for a plural entry — it always reads `msgstr[0]`. Previous rounds argued
-this was safe because Solanum's one plural *English* msgid/msgid_plural
-pair (`"Lap {}"`) is identical, and reasoned from there to "not yet
-produced a visible bug." That reasoning does not hold: translators choose
-plural wording per their own language's grammar independent of the
-English source, and four shipped `.po` files do give genuinely different
-singular/plural `msgstr`s for this key — `ca`, `fur`, `oc`, `pt_BR` (see
-`.reports/COMPONENT_PARITY.md` for the exact strings and
-`.reports/TEST_PARITY.md` for the test-coverage angle). Those four
-languages render the wrong grammatical form on every lap past the first.
-This is **not** a key-axis gap (the `msgid` exists correctly, in the right
-language, with the right context — translation-parity's own job is done),
-so the 44/44 count below is not wrong; it is a `component-parity`/
-`test-parity` behaviour gap that this ledger's own methodology cannot see,
-and this note is corrected to say so plainly rather than reassure that it
-has not happened.
+is 44/44, 0 gaps, 0 extra, genuinely, and was never in question (the plural
+gap was always a dispatch-code gap, not a missing-key gap). I re-ran the
+fix this round rather than taking the commit message at its word:
+
+```sh
+$ nix develop --command xvfb-run -a ruby -r./lib/solanum_rb -e '
+  ENV["LANGUAGE"]="ca"; SolanumRb::I18n.reset!
+  puts SolanumRb::I18n.ni18n_f("Lap {}", "Lap {}", 1, 1)
+  puts SolanumRb::I18n.ni18n_f("Lap {}", "Lap {}", 2, 2)'
+Volta 1
+Voltes 2
+```
+
+Catalan (and, by the same code path, `fur`/`oc`/`pt_BR`) now renders the
+plural `msgstr` from lap 2 onward, matching upstream's visible output. The
+previously-reported rendering bug in those four locales is closed **as a
+rendering outcome**.
+
+**It is not closed as a mechanism, and that distinction matters for this
+ledger specifically.** `.reports/TEST_PARITY.md` traces the code and finds
+that `plural_rule` never actually reads any catalogue's `Plural-Forms`
+header — `store` discards the PO header entry (`msgid ""`) for every
+locale before it reaches the catalogue hash, so `ni18n_f` always falls back
+to English's hardcoded binary rule. The four locales render correctly only
+because their real plural rules happen to coincide with that hardcoded
+fallback — not because their `Plural-Forms` header was read and honoured.
+Translation-parity's own job (does every msgid/msgstr exist, correctly) is
+still done — the `.po` files themselves are correct and complete — but this
+ledger would be overstating the finding to call the *dispatch* fixed. It is
+closed for the one string this app currently has; the mechanism that would
+keep it closed for the next plural string in a 3-or-4-form locale (`be`,
+`cs`, `hr`, `pl`, `ro`, `ru`, `he`, `sl`, `sr`, `uk` — 10 of 47 shipped
+locales) does not exist yet. See `.reports/TEST_PARITY.md` for the full
+trace, including a second, independent defect found in the (currently
+unreachable) plural-rule expression compiler itself. Separately, four of
+the eight new wrapper methods (`ni18n_k`, `pni18n`, `pni18n_f`, `pni18n_k`)
+are called by no test anywhere.
 | Port messages | 44 |
 | Gaps | 0 |
 | Extra | 0 |
@@ -180,8 +199,19 @@ changes — no msgid lives in CSS — and both are documented in `PORTING.md`.
 
 ## Verdict
 
-0 gaps, 0 extras, 47/47 languages, once the census is corrected for the
-upstream app's `i18n*` wrapper convention by hand. Running the shared
-script as-is and trusting its output would have produced a wrong report in
-both directions at once; that correction, not the script's raw numbers, is
-what this report's "0 gaps" rests on.
+0 gaps, 0 extras, 47/47 languages on the key axis — every upstream
+`(msgctxt, msgid)` exists, correctly, in `po/*.po` — once the census is
+corrected for the upstream app's `i18n*` wrapper convention by hand. Running
+the shared script as-is and trusting its output would have produced a wrong
+report in both directions at once; that correction, not the script's raw
+numbers, is what this report's "0 gaps" rests on.
+
+This is **not** a verdict on whether the shipped msgids are reliably
+selected at runtime. See this round's correction above and
+`.reports/TEST_PARITY.md`/`.reports/accountability-ensurance.md`: the
+plural-dispatch mechanism added this round does not read any catalogue's
+own `Plural-Forms` header, so a key existing correctly in `po/ru.po` is not
+yet proof that the port will ever select the right form of it. That is a
+test-parity/component-parity finding, not a translation-parity one — the
+keys are genuinely all there — but a reader stopping at this file's "0
+gaps" would miss it, so it is named here too.
