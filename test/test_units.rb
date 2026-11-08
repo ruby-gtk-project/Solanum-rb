@@ -147,6 +147,33 @@ section('the catalogue') do
   use_locale('C')
 end
 
+# Ported from upstream's ni18n/ni18n_f (src/i18n.rs): plural dispatch picks
+# the form by count rather than always reading msgstr[0]. Exercised against
+# a real shipped catalogue (ca.po), not the C/English locale every other
+# section in this file runs in — English's own singular/plural wording
+# happens to be identical for every msgid this port emits, so a test that
+# only ever ran in C could not tell a correct plural dispatch from a broken
+# one. Catalan's are genuinely different words ("Volta"/"Voltes"), the same
+# gap the window's live lap label hits in four shipped locales.
+section('plural dispatch against a real catalogue') do
+  I = SolanumRb::I18n
+
+  use_locale('ca')
+  check('Catalan is picked up') { I.language == 'ca' }
+  check('count 1 renders the singular form') { I.ni18n_f('Lap {}', 'Lap {}', 1, 1) == 'Volta 1' }
+  check('count 2 renders the plural form, a different word') do
+    I.ni18n_f('Lap {}', 'Lap {}', 2, 2) == 'Voltes 2'
+  end
+  check('a bare ni18n without placeholders also dispatches by count') do
+    I.ni18n('Lap {}', 'Lap {}', 1) == 'Volta {}' && I.ni18n('Lap {}', 'Lap {}', 5) == 'Voltes {}'
+  end
+  check('an unknown plural msgid falls back to English\'s own rule') do
+    I.ni18n_f('Widget', 'Widgets', 1, 1) == 'Widget' && I.ni18n_f('Widget', 'Widgets', 2, 2) == 'Widgets'
+  end
+
+  use_locale('C')
+end
+
 # Ported from upstream's test_i18n_f and test_i18n_k (src/i18n.rs), which
 # exercise freplace/kreplace directly against literal format strings rather
 # than catalogue entries. `C` means no translation, so `_` is the identity

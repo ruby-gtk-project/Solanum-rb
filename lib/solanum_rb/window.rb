@@ -236,8 +236,8 @@ module SolanumRb
 
     def update_lap_label
       # Translators: Every pomodoro session can range from 1-99 laps, so {}
-      # will contain a number between 1 and 99. Lap is always singular.
-      lap_label.label = f_('Lap {}', @pomodoro_count)
+      # will contain a number between 1 and 99.
+      lap_label.label = ni18n_f('Lap {}', 'Lap {}', @pomodoro_count, @pomodoro_count)
     end
 
     def set_timer_label(seconds)
