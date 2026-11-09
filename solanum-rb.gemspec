@@ -96,6 +96,11 @@ Gem::Specification.new do |spec|
   spec.executables = ["solanum-rb"]
   spec.require_paths = ["lib"]
 
+  spec.add_dependency("adwaita", "~> 4.3")
+  spec.add_dependency("glib2", "~> 4.3")
+  spec.add_dependency("gstreamer_play", "~> 1.1")
+  spec.add_dependency("gtk4", "~> 4.3")
+
   # NOTE: It is preferable to list development dependencies in the gemspec due to increased
   #       visibility and discoverability.
   #       However, development dependencies in gemspec will install on
@@ -108,13 +113,6 @@ Gem::Specification.new do |spec|
   #
   #       Development dependencies that require strictly newer Ruby versions should be in a "gemfile",
   #       and preferably a modular one (see gemfiles/modular/*.gemfile).
-
-  # Runtime: the toolkit this app is built on.
-  spec.add_dependency("glib2", "~> 4.3")
-  spec.add_dependency("gtk4", "~> 4.3")
-  spec.add_dependency("adwaita", "~> 4.3")
-  # The chime and the beep, through GstPlay. See lib/solanum_rb/sound.rb.
-  spec.add_dependency("gstreamer_play", "~> 1.1")
 
   # Dev, Test, & Release Tasks
   spec.add_development_dependency("kettle-dev", "~> 3.1", ">= 3.1.26")             # ruby >= 3.4
